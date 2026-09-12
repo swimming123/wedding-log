@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#1976D2;
+    --primary-dark:#115293;
+    --primary-light:#E3F2FD;
+    --bg:#FAFAFA;
+    --surface:#FFFFFF;
+    --border:#E0E0E0;
+    --divider:#EEEEEE;
+    --header-fill:#F5F5F5;
+    --text:#212121;
+    --text-secondary:#757575;
+    --success:#2E7D32; --success-bg:#E8F5E9;
+    --warning:#EF6C00; --warning-bg:#FFF3E0;
+    --error:#C62828; --error-bg:#FFEBEE;
+    --info:#1565C0; --info-bg:#E3F2FD;
+    --shadow:0 1px 2px rgba(0,0,0,0.12), 0 1px 1px rgba(0,0,0,0.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Roboto','Malgun Gothic','Apple SD Gothic Neo',sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    font-size:14px;
+  }
+  button, input, textarea{ font-family:inherit; }
+
+  /* ---------- App bar ---------- */
+  .appbar{ background:var(--surface); border-bottom:1px solid var(--border); }
+  .appbar-inner{
+    max-width:1000px; margin:0 auto; padding:12px 20px; display:flex; align-items:center; justify-content:space-between;
+  }
+  .appbar-title{ font-weight:700; font-size:16px; color:var(--text); }
+  .appbar-right{ display:flex; align-items:center; gap:14px; }
+  .user-email{ font-size:12.5px; color:var(--text-secondary); }
+  .text-btn{
+    background:none; border:none; color:var(--primary); font-size:13px; cursor:pointer; padding:4px 6px;
+  }
+  .text-btn:hover{ text-decoration:underline; }
+
+  .wrap{ max-width:1000px; margin:0 auto; padding:20px 20px 70px; }
+
+  /* ---------- Login ---------- */
+  .login-screen{
+    min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg); padding:20px;
+  }
+  .login-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:4px; box-shadow:var(--shadow);
+    padding:32px 30px; width:100%; max-width:360px;
+  }
+  .login-title{ font-weight:700; font-size:18px; margin-bottom:4px; }
+  .login-sub{ font-size:12.5px; color:var(--text-secondary); margin-bottom:20px; }
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12px; color:var(--text-secondary); margin-bottom:5px; }
+  .field input, .field textarea{
+    width:100%; font-size:14px; padding:9px 11px; border:1px solid var(--border); border-radius:4px;
+    background:#fff; color:var(--text);
+  }
+  .field input:focus, .field textarea:focus{ outline:none; border-color:var(--primary); box-shadow:0 0 0 2px var(--primary-light); }
+  .login-error{ font-size:12.5px; color:var(--error); margin:-4px 0 12px; min-height:16px; }
+  .btn-primary{
+    background:var(--primary); color:#fff; border:none; padding:10px 16px; border-radius:4px;
+    font-size:13.5px; font-weight:500; cursor:pointer;
+  }
+  .btn-primary:hover{ background:var(--primary-dark); }
+  .full-width{ width:100%; }
+  .btn-ghost{
+    background:none; border:1px solid var(--border); color:var(--text-secondary); padding:8px 14px;
+    border-radius:4px; cursor:pointer; font-size:13px;
+  }
+  .btn-ghost:hover{ border-color:var(--primary); color:var(--primary); }
+
+  /* ---------- Summary block ---------- */
+  .block{ background:var(--surface); border:1px solid var(--border); border-radius:4px; box-shadow:var(--shadow); }
+  .summary-block{ padding:18px 22px; margin-bottom:16px; }
+  .summary-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+  .wedding-date-row{ font-size:13.5px; color:var(--text-secondary); }
+  .wedding-date-row b{ color:var(--text); font-weight:500; }
+  .date-edit-btn{
+    border:1px solid var(--border); background:#fff; color:var(--text-secondary);
+    font-size:12px; padding:4px 10px; border-radius:4px; cursor:pointer; margin-left:6px;
+  }
+  .date-edit-btn:hover{ border-color:var(--primary); color:var(--primary); }
+  .dday-number{ font-weight:700; font-size:34px; color:var(--primary); line-height:1; }
+  .date-edit-row{ display:none; align-items:center; gap:8px; margin-top:10px; }
+  .date-edit-row.open{ display:flex; }
+  .date-edit-row input[type=date]{
+    font-size:13.5px; padding:6px 9px; border:1px solid var(--border); border-radius:4px; background:#fff;
+  }
+
+  .now-banner{
+    margin-top:16px; padding:11px 14px; background:var(--info-bg); border-left:3px solid var(--primary);
+    border-radius:2px; font-size:13px;
+  }
+  .now-banner .now-label{ font-weight:500; color:var(--primary); font-size:11.5px; margin-bottom:2px; }
+  .now-banner.done-state{ background:var(--success-bg); border-left-color:var(--success); }
+  .now-banner.done-state .now-label{ color:var(--success); }
+  .now-banner .now-sub{ color:var(--text-secondary); font-size:12.5px; margin-top:2px; }
+
+  /* ---------- Tabs ---------- */
+  .tabs{ display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:16px; }
+  .tab-btn{
+    font-weight:500; font-size:14px; background:none; border:none; padding:11px 18px; cursor:pointer;
+    color:var(--text-secondary); border-bottom:2px solid transparent;
+  }
+  .tab-btn.active{ color:var(--primary); border-bottom-color:var(--primary); }
+  .panel{ display:none; }
+  .panel.active{ display:block; }
+
+  /* ---------- Step blocks / sheet tables ---------- */
+  .step-block{ margin-bottom:14px; overflow:hidden; }
+  .step-bar{
+    display:flex; align-items:center; gap:10px; background:var(--header-fill); border-bottom:1px solid var(--border);
+    padding:9px 14px; cursor:pointer; user-select:none; flex-wrap:wrap;
+  }
+  .outline-toggle{
+    width:18px; height:18px; flex:0 0 auto; border:1px solid #BDBDBD; background:#fff; border-radius:2px;
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:#616161;
+  }
+  .step-title{ font-weight:500; font-size:13.5px; color:var(--text); }
+  .step-when{ font-size:12px; color:var(--text-secondary); }
+  .step-bar-spacer{ flex:1 1 auto; }
+  .chip{ font-size:11px; font-weight:500; padding:3px 9px; border-radius:10px; white-space:nowrap; }
+  .chip-done{ background:var(--success-bg); color:var(--success); }
+  .chip-current{ background:var(--info-bg); color:var(--info); }
+  .chip-upcoming{ background:#EEEEEE; color:var(--text-secondary); }
+  .chip-overdue{ background:var(--error-bg); color:var(--error); }
+  .chip-unpaid{ background:var(--error-bg); color:var(--error); }
+  .chip-deposit{ background:var(--warning-bg); color:var(--warning); }
+  .chip-interim{ background:var(--info-bg); color:var(--info); }
+  .chip-paid{ background:var(--success-bg); color:var(--success); }
+  .progress-mini{ font-size:12px; color:var(--text-secondary); min-width:38px; text-align:right; }
+  .spend-mini{ font-size:12px; color:var(--primary); font-weight:500; }
+
+  .step-body{ display:none; }
+  .step-block.open .step-body{ display:block; }
+
+  .table-scroll{ overflow-x:auto; }
+  table.sheet{ width:100%; min-width:760px; border-collapse:collapse; font-size:12.8px; }
+  table.sheet th{
+    background:#FAFAFA; border:1px solid var(--border); padding:7px 10px; text-align:left;
+    font-weight:500; color:var(--text-secondary); white-space:nowrap; position:sticky; top:0;
+  }
+  table.sheet td{ border:1px solid var(--border); padding:0; vertical-align:middle; background:#fff; }
+  table.sheet tbody tr:hover td{ background:#FAFAFA; }
+  table.sheet td.static-cell{ padding:7px 10px; color:var(--text); }
+  table.sheet td.static-cell.muted{ color:var(--text-secondary); }
+  table.sheet td .cell-input{
+    width:100%; border:none; background:transparent; padding:7px 10px; font:inherit; color:var(--text);
+  }
+  table.sheet td .cell-input:focus{ outline:2px solid var(--primary); outline-offset:-2px; background:var(--primary-light); }
+  .check-cell{ text-align:center; width:34px; }
+  .item-check{
+    width:16px; height:16px; cursor:pointer; accent-color:var(--primary); vertical-align:middle;
+  }
+  .name-done{ text-decoration:line-through; color:var(--text-secondary); }
+
+  .exp-link-cell{ padding:5px 8px; }
+  .exp-link-empty-btn{
+    background:none; border:1px dashed #B0BEC5; color:var(--primary); font-size:11.5px; padding:4px 8px;
+    border-radius:4px; cursor:pointer; white-space:nowrap;
+  }
+  .exp-link-empty-btn:hover{ background:var(--primary-light); }
+  .exp-link-filled{ font-size:11.5px; display:flex; flex-direction:column; gap:3px; }
+  .exp-link-filled .amt{ font-weight:500; color:var(--primary); }
+  .exp-link-filled .lbtns{ display:flex; gap:8px; }
+  .exp-link-filled .lbtns button{
+    background:none; border:none; color:var(--text-secondary); font-size:11px; cursor:pointer; padding:0;
+  }
+  .exp-link-filled .lbtns button:hover{ color:var(--primary); text-decoration:underline; }
+  .exp-link-filled .lbtns button.unlink:hover{ color:var(--error); }
+
+  /* ---------- Expense sheet ---------- */
+  .exp-toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .exp-toolbar h3{ font-size:14.5px; font-weight:500; margin:0; }
+
+  .summary-strip{ display:flex; border:1px solid var(--border); border-radius:4px; overflow:hidden; margin-bottom:18px; background:#fff; }
+  .summary-cell{ flex:1; padding:13px 16px; border-right:1px solid var(--border); }
+  .summary-cell:last-child{ border-right:none; }
+  .summary-cell .label{ font-size:11.5px; color:var(--text-secondary); }
+  .summary-cell .value{ font-weight:700; font-size:18px; margin-top:3px; }
+  .summary-cell.accent .value{ color:var(--primary); }
+  .summary-cell.warn .value{ color:var(--error); }
+
+  table.exp-sheet{ width:100%; min-width:1080px; border-collapse:collapse; font-size:12.8px; }
+  table.exp-sheet th{
+    background:#FAFAFA; border:1px solid var(--border); padding:7px 10px; text-align:left; font-weight:500; color:var(--text-secondary); white-space:nowrap;
+  }
+  table.exp-sheet td{ border:1px solid var(--border); padding:0; vertical-align:middle; background:#fff; }
+  table.exp-sheet tbody tr:hover td{ background:#FAFAFA; }
+  table.exp-sheet td .cell-input{
+    width:100%; border:none; background:transparent; padding:7px 9px; font:inherit; color:var(--text);
+  }
+  table.exp-sheet td .cell-input:focus{ outline:2px solid var(--primary); outline-offset:-2px; background:var(--primary-light); }
+  table.exp-sheet td.num .cell-input{ text-align:right; }
+  table.exp-sheet td.status-cell{ padding:6px 8px; text-align:center; }
+  table.exp-sheet td.link-cell{ padding:6px 8px; font-size:11.5px; color:var(--text-secondary); }
+  table.exp-sheet td.del-cell{ text-align:center; width:36px; }
+  .del-icon-btn{
+    background:none; border:none; color:#BDBDBD; font-size:15px; cursor:pointer; padding:4px;
+  }
+  .del-icon-btn:hover{ color:var(--error); }
+
+  .add-row-btn{
+    background:none; border:1px dashed #B0BEC5; color:var(--primary); font-size:12.5px; padding:7px 12px;
+    border-radius:4px; cursor:pointer; margin-top:10px;
+  }
+  .add-row-btn:hover{ background:var(--primary-light); }
+
+  .empty-note{ text-align:center; color:var(--text-secondary); font-size:13px; padding:30px 10px; border:1px dashed var(--border); border-radius:4px; }
+
+  footer{ text-align:center; font-size:11px; color:var(--text-secondary); margin-top:30px; }
+
+  @media (max-width:640px){
+    .dday-number{ font-size:28px; }
+    .summary-strip{ flex-wrap:wrap; }
+    .summary-cell{ flex:1 1 50%; border-bottom:1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-title">Wedding Log</div>
+    <div class="login-sub">등록된 계정으로 로그인하세요</div>
+    <div class="field">
+      <label>이메일</label>
+      <input type="email" id="loginEmail" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>비밀번호</label>
+      <input type="password" id="loginPassword" autocomplete="current-password">
+    </div>
+    <div class="login-error" id="loginError"></div>
+    <button class="btn-primary full-width" id="loginBtn">로그인</button>
+  </div>
+</div>
+
+<div id="appRoot" style="display:none;">
+  <div class="appbar">
+    <div class="appbar-inner">
+      <span class="appbar-title">Wedding Log</span>
+      <div class="appbar-right">
+        <span class="user-email" id="userEmail"></span>
+        <button class="text-btn" id="logoutBtn">로그아웃</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+
+    <div class="block summary-block">
+      <div class="summary-top">
+        <div>
+          <div class="wedding-date-row">
+            예식일 <b id="weddingDateText">-</b>
+            <button class="date-edit-btn" id="editDateBtn">날짜 수정</button>
+          </div>
+          <div class="date-edit-row" id="dateEditRow">
+            <input type="date" id="weddingDateInput">
+            <button class="btn-primary" id="saveDateBtn" style="padding:6px 12px;font-size:12.5px;">저장</button>
+          </div>
+        </div>
+        <div class="dday-number" id="ddayNumber">D-0</div>
+      </div>
+      <div class="now-banner" id="nowBanner">
+        <div class="now-label" id="nowLabel">지금 할 일</div>
+        <div id="nowStepName">불러오는 중...</div>
+        <div class="now-sub" id="nowStepSub"></div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="timeline">타임라인 · 체크리스트</button>
+      <button class="tab-btn" data-tab="expenses">지출 장부</button>
+    </div>
+
+    <div class="panel active" id="panel-timeline">
+      <div id="timelineList"></div>
+    </div>
+
+    <div class="panel" id="panel-expenses">
+      <div class="summary-strip" id="expSummary"></div>
+      <div class="exp-toolbar">
+        <h3>지출 내역</h3>
+      </div>
+      <div class="table-scroll">
+        <table class="exp-sheet" id="expTable" style="display:none;">
+          <thead>
+            <tr>
+              <th>날짜</th><th>항목</th><th>업체</th><th>총금액</th><th>계약금</th><th>중도금</th><th>잔금</th>
+              <th>상태</th><th>메모</th><th>연결됨</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="expTableBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-note" id="expEmptyNote" style="display:none;">아직 등록된 지출이 없어요. 아래 버튼이나 타임라인의 각 항목에서 지출을 기록해보세요.</div>
+      <button class="add-row-btn" id="addExpRowBtn">+ 새 지출 행 추가</button>
+    </div>
+
+    <footer>변경 내용은 Firestore에 실시간으로 저장·동기화돼요.</footer>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+import {
+  getFirestore, doc, setDoc, onSnapshot
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+/* ============ Firebase 초기화 ============ */
+const firebaseConfig = {
+  apiKey: "AIzaSyCv4C_YQfPmq3vWAzfH9hicceBKn7uGDcQ",
+  authDomain: "wedding-log-ab8be.firebaseapp.com",
+  projectId: "wedding-log-ab8be",
+  storageBucket: "wedding-log-ab8be.firebasestorage.app",
+  messagingSenderId: "1051939244748",
+  appId: "1:1051939244748:web:42e1b03187ce036f8c9069",
+  measurementId: "G-MMCL30SMFV"
+};
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+
+const settingsRef = doc(db, "app", "settings");
+const checklistRef = doc(db, "app", "checklist");
+const expensesRef = doc(db, "app", "expenses");
+
+/* ============ 기본 데이터 ============ */
+const DEFAULT_WEDDING_DATE = "2027-06-13";
+
+const DEFAULT_STEPS = [
+  { id:1, title:"Step 1 · Pre-Wedding", monthsBefore:15, when:"D-1년 3개월", desc:"양가인사 · 선물준비 · 계획세우기",
+    items:[
+      {name:"양가인사 날잡기", desc:"상견례까진 아니더라도 양가인사는!"},
+      {name:"양가인사 선물준비", desc:"한정선, 꽃바구니 추천"},
+      {name:"양가인사", desc:"보통 예약은 양가 부모님이"},
+      {name:"스드메 업체선정", desc:"이때는 업체별 비교만 먼저", vendor:"컬러인웨딩"}
+    ]},
+  { id:2, title:"Step 2 · Hall", monthsBefore:12, when:"D-1년", desc:"홀투어 · 홀관련예약 · 플래너계약",
+    items:[
+      {name:"암행홀투어", desc:"보통 당일계약 혜택이 커요. 맘에 드는 곳은 미리 가보는 걸 추천"},
+      {name:"홀 계약", desc:"홀 계약시 부가 서비스 꼼꼼히 따지기"},
+      {name:"홀 본식스냅 계약", desc:"홀 연계여부 필수 확인"},
+      {name:"홀 본식DVD 계약", desc:"홀 연계여부 필수 확인"},
+      {name:"플래너 계약", desc:"다이렉트웨딩 추천"}
+    ]},
+  { id:3, title:"Step 3 · 스드메", monthsBefore:10, when:"D-10개월", desc:"스드메 · 예복 및 관련 예약(헤어변형 등)",
+    items:[
+      {name:"스튜디오 확정", desc:""},
+      {name:"ㄴ 헤어변형 contact", desc:"스튜디오 확정하자마자"},
+      {name:"드레스 확정", desc:"드레스투어 or 지정"},
+      {name:"메이크업 확정", desc:"원하면 데모메이크업 잡기"},
+      {name:"예복 업체 확정", desc:"스튜디오 촬영 3개월 전에 필수"}
+    ]},
+  { id:4, title:"Step 4 · 신혼준비", monthsBefore:7, when:"D-7개월", desc:"신혼여행 · 신혼집 준비",
+    items:[
+      {name:"신혼집 투어 · 계약", desc:"신혼집은 빨리 구하는 게 좋아요"},
+      {name:"신혼여행 항공권", desc:"1년~7개월 전이 가장 저렴"},
+      {name:"신혼여행 호텔", desc:"무료취소 가능한 곳 선점"},
+      {name:"촬영 드레스 가봉", desc:"스튜디오 촬영 1개월 전 추천"}
+    ]},
+  { id:5, title:"Step 5 · 스튜디오 촬영", monthsBefore:6, when:"D-6개월", desc:"스튜디오 촬영 및 관련 준비",
+    items:[
+      {name:"촬영시연 준비", desc:""},
+      {name:"촬영장 소품준비", desc:""},
+      {name:"헤어변형 체크", desc:""}
+    ]},
+  { id:6, title:"Step 6 · 청첩장 · 양가부모님", monthsBefore:3.5, when:"D-3~4개월", desc:"상견례 · 혼주한복 · 청첩장 제작",
+    items:[
+      {name:"상견례", desc:"양가 상견례 일정 · 장소 잡기"},
+      {name:"혼주한복 준비", desc:"혼주(부모님) 한복 맞춤"},
+      {name:"청첩장 디자인 · 제작", desc:"시안 선택 및 제작 의뢰"},
+      {name:"모바일 청첩장 제작", desc:"모바일 청첩장 함께 준비"}
+    ]},
+  { id:7, title:"Step 7 · Hall 관련 준비들", monthsBefore:2, when:"D-2개월", desc:"식전영상 · 식권대장 · 답례품준비",
+    items:[
+      {name:"식전영상 제작", desc:"업체 or 셀프 제작"},
+      {name:"식권대장 준비", desc:"하객 식사 인원 파악 및 예약"},
+      {name:"답례품 준비", desc:"종류 · 수량 결정 및 주문"},
+      {name:"청첩장 발송 시작", desc:"지인 · 직장 발송"}
+    ]},
+  { id:8, title:"Step 8 · 본식 위한 최종 Check", monthsBefore:1, when:"D-1개월", desc:"본식드레스가봉 · 웨딩홀미팅(리허설 등)",
+    items:[
+      {name:"본식 드레스 가봉", desc:"최종 피팅 확인"},
+      {name:"웨딩홀 최종 미팅", desc:"식순 · 리허설 협의"},
+      {name:"청첩장 최종 발송", desc:"마무리 발송"},
+      {name:"축의금 봉투 · 방명록 준비", desc:"소품 최종 점검"},
+      {name:"신랑신부 뷰티 준비", desc:"피부관리 · 헤어 예약 마무리"}
+    ]}
+];
+
+/* ============ 상태 ============ */
+let weddingDate = DEFAULT_WEDDING_DATE;
+let steps = null;
+let expenses = [];
+let unsubscribers = [];
+let pendingJumpExpId = null;
+
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function fmtWon(n){ n = Number(n)||0; return n.toLocaleString('ko-KR') + '원'; }
+function fmtDate(d){
+  if(!d) return '';
+  const dt = new Date(d + 'T00:00:00');
+  if(isNaN(dt)) return d;
+  return `${dt.getFullYear()}.${String(dt.getMonth()+1).padStart(2,'0')}.${String(dt.getDate()).padStart(2,'0')}`;
+}
+function todayStr(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function subtractMonths(dateObj, months){
+  const d = new Date(dateObj);
+  const whole = Math.floor(months);
+  const frac = months - whole;
+  d.setMonth(d.getMonth() - whole);
+  if(frac) d.setDate(d.getDate() - Math.round(frac*30));
+  return d;
+}
+function daysBetween(a,b){
+  const MS = 86400000;
+  const da = new Date(a.getFullYear(),a.getMonth(),a.getDate());
+  const db2 = new Date(b.getFullYear(),b.getMonth(),b.getDate());
+  return Math.round((db2-da)/MS);
+}
+function findExpense(id){ return expenses.find(e => e.id === id) || null; }
+function findItem(stepId, itemId){
+  const step = steps.find(s => s.id === stepId);
+  if(!step) return {step:null, item:null};
+  const item = step.items.find(i => i.id === itemId);
+  return {step, item};
+}
+function stepShortTitle(step){ return step.title.replace(/^Step\s*\d+\s*·\s*/,''); }
+
+/* ============ Firestore 저장 ============ */
+async function saveSettings(){
+  try{ await setDoc(settingsRef, {weddingDate}); }
+  catch(e){ console.error('settings save failed', e); }
+}
+async function saveChecklist(){
+  try{ await setDoc(checklistRef, {steps}); }
+  catch(e){ console.error('checklist save failed', e); }
+}
+async function saveExpenses(){
+  try{ await setDoc(expensesRef, {expenses}); }
+  catch(e){ console.error('expenses save failed', e); }
+}
+
+function buildDefaultSteps(){
+  return DEFAULT_STEPS.map(s => ({
+    ...s,
+    items: s.items.map(it => ({
+      id: uid(), name: it.name, desc: it.desc||'', vendor: it.vendor||'', phone:'',
+      done:false, doneDate:'', memo:'', expenseId:null
+    }))
+  }));
+}
+
+/* ============ Firestore 리스너 ============ */
+function startListeners(){
+  unsubscribers.forEach(u => u());
+  unsubscribers = [];
+
+  unsubscribers.push(onSnapshot(settingsRef, snap => {
+    weddingDate = (snap.exists() && snap.data().weddingDate) ? snap.data().weddingDate : DEFAULT_WEDDING_DATE;
+    if(!snap.exists()) saveSettings();
+    renderHero();
+    renderTimeline();
+  }, err => console.error('settings listener error', err)));
+
+  unsubscribers.push(onSnapshot(checklistRef, snap => {
+    if(snap.exists() && Array.isArray(snap.data().steps) && snap.data().steps.length){
+      steps = snap.data().steps;
+      steps.forEach(s => s.items.forEach(it => { if(it.expenseId===undefined) it.expenseId = null; }));
+    }else{
+      steps = buildDefaultSteps();
+      saveChecklist();
+    }
+    renderTimeline();
+    renderHero();
+  }, err => console.error('checklist listener error', err)));
+
+  unsubscribers.push(onSnapshot(expensesRef, snap => {
+    expenses = (snap.exists() && Array.isArray(snap.data().expenses)) ? snap.data().expenses : [];
+    expenses.forEach(e => {
+      if(e.linkedStepId===undefined) e.linkedStepId = null;
+      if(e.linkedItemId===undefined) e.linkedItemId = null;
+    });
+    renderExpSummary();
+    renderExpList();
+    renderTimeline();
+    if(pendingJumpExpId){
+      const id = pendingJumpExpId;
+      pendingJumpExpId = null;
+      requestAnimationFrame(() => scrollToExpense(id));
+    }
+  }, err => console.error('expenses listener error', err)));
+}
+
+/* ============ 렌더: 요약 ============ */
+function renderHero(){
+  if(!steps) return;
+  const wDate = new Date(weddingDate + 'T00:00:00');
+  const today = new Date();
+  const diff = daysBetween(today, wDate);
+
+  $('#weddingDateText').textContent = fmtDate(weddingDate) + ' (' + ['일','월','화','수','목','금','토'][wDate.getDay()] + ')';
+  $('#weddingDateInput').value = weddingDate;
+
+  const ddayEl = $('#ddayNumber');
+  if(diff > 0) ddayEl.textContent = 'D-' + diff;
+  else if(diff === 0) ddayEl.textContent = 'D-DAY';
+  else ddayEl.textContent = 'D+' + Math.abs(diff);
+
+  const banner = $('#nowBanner');
+  if(diff <= 0){
+    banner.classList.add('done-state');
+    $('#nowLabel').textContent = diff===0 ? '오늘' : '완료';
+    $('#nowStepName').textContent = diff===0 ? '오늘이 바로 그 날이에요.' : '결혼을 축하드려요. 즐거운 신혼 되세요.';
+    $('#nowStepSub').textContent = '';
+    return;
+  }
+  banner.classList.remove('done-state');
+
+  const stepDates = steps.map(s => subtractMonths(wDate, s.monthsBefore));
+  let currentIdx = stepDates.findIndex(d => d >= today);
+  if(currentIdx === -1) currentIdx = steps.length - 1;
+  const cur = steps[currentIdx];
+  const remain = cur.items.filter(i=>!i.done).length;
+
+  $('#nowLabel').textContent = '지금 할 일';
+  $('#nowStepName').textContent = `${stepShortTitle(cur)} — ${cur.desc}`;
+  $('#nowStepSub').textContent = remain > 0
+    ? `${cur.when} 단계 · 남은 항목 ${remain}개`
+    : `${cur.when} 단계 · 이 단계는 모두 완료했어요`;
+}
+
+/* ============ 렌더: 타임라인 ============ */
+function stepStatus(step, wDate, today){
+  const dueDate = subtractMonths(wDate, step.monthsBefore);
+  const total = step.items.length;
+  const done = step.items.filter(i=>i.done).length;
+  const allDone = total>0 && done===total;
+  const passed = dueDate < today;
+  let status = 'upcoming';
+  if(allDone) status = 'done';
+  else if(passed) status = 'overdue';
+  return {dueDate, total, done, allDone, passed, status};
+}
+
+function paymentStatus(e){
+  const total = Number(e.total)||0;
+  const paid = (Number(e.deposit)||0) + (Number(e.interim)||0) + (Number(e.balance)||0);
+  if(paid <= 0) return {label:'미납', cls:'chip-unpaid'};
+  if(total > 0 && paid >= total) return {label:'잔금완납', cls:'chip-paid'};
+  if(Number(e.interim) > 0) return {label:'중도금 납부', cls:'chip-interim'};
+  return {label:'계약금만 납부', cls:'chip-deposit'};
+}
+
+function renderTimeline(){
+  if(!steps) return;
+  const wDate = new Date(weddingDate + 'T00:00:00');
+  const today = new Date();
+  const stepInfos = steps.map(s => ({s, info: stepStatus(s, wDate, today)}));
+
+  let currentIdx = stepInfos.findIndex(x => x.info.dueDate >= today);
+  if(currentIdx === -1) currentIdx = steps.length - 1;
+
+  const container = $('#timelineList');
+  const openIds = new Set($$('.step-block.open').map(el => el.dataset.stepId));
+  const hadAny = container.children.length > 0;
+  container.innerHTML = '';
+
+  stepInfos.forEach(({s, info}, idx) => {
+    const block = document.createElement('div');
+    block.className = 'step-block block';
+    block.dataset.stepId = s.id;
+    const shouldOpen = hadAny ? openIds.has(String(s.id)) : (idx === currentIdx);
+    if(shouldOpen) block.classList.add('open');
+
+    let chipHtml = '';
+    if(info.status === 'done') chipHtml = `<span class="chip chip-done">완료</span>`;
+    else if(info.status === 'overdue') chipHtml = `<span class="chip chip-overdue">지연</span>`;
+    else if(idx === currentIdx) chipHtml = `<span class="chip chip-current">진행중</span>`;
+    else chipHtml = `<span class="chip chip-upcoming">예정</span>`;
+
+    const linkedExpenses = s.items.map(it => it.expenseId ? findExpense(it.expenseId) : null).filter(Boolean);
+    const stepSpend = linkedExpenses.reduce((sum,e)=> sum+(Number(e.total)||0), 0);
+
+    block.innerHTML = `
+      <div class="step-bar">
+        <span class="outline-toggle">${shouldOpen ? '−' : '+'}</span>
+        <span class="step-title">${s.title}</span>
+        <span class="step-when">${s.when} · ${fmtDate(info.dueDate.toISOString().slice(0,10))} 까지</span>
+        <span class="step-bar-spacer"></span>
+        ${stepSpend>0 ? `<span class="spend-mini">${fmtWon(stepSpend)}</span>` : ''}
+        <span class="progress-mini">${info.done}/${info.total}</span>
+        ${chipHtml}
+      </div>
+      <div class="step-body">
+        <div class="table-scroll">
+          <table class="sheet">
+            <thead>
+              <tr>
+                <th></th><th>구분</th><th>설명</th><th>확정 업체명</th><th>업체 연락처</th><th>완료일</th><th>메모</th><th>지출</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    const tbody = block.querySelector('tbody');
+    s.items.forEach(item => {
+      const tr = document.createElement('tr');
+
+      const linkedExp = item.expenseId ? findExpense(item.expenseId) : null;
+      let linkCellHtml = '';
+      if(linkedExp){
+        const st = paymentStatus(linkedExp);
+        linkCellHtml = `
+          <div class="exp-link-filled">
+            <span class="amt">${fmtWon(linkedExp.total)}</span>
+            <span class="chip ${st.cls}" style="width:fit-content;">${st.label}</span>
+            <span class="lbtns">
+              <button class="view-exp-btn">보기</button>
+              <button class="unlink-exp-btn unlink">해제</button>
+            </span>
+          </div>`;
+      }else{
+        linkCellHtml = `<button class="exp-link-empty-btn add-exp-from-item-btn">+ 추가</button>`;
+      }
+
+      tr.innerHTML = `
+        <td class="check-cell"><input type="checkbox" class="item-check" ${item.done?'checked':''}></td>
+        <td class="static-cell"><span class="${item.done?'name-done':''}">${item.name}</span></td>
+        <td class="static-cell muted">${item.desc || ''}</td>
+        <td><input type="text" class="cell-input f-vendor" value="${item.vendor||''}" placeholder="업체명"></td>
+        <td><input type="text" class="cell-input f-phone" value="${item.phone||''}" placeholder="010-0000-0000"></td>
+        <td><input type="date" class="cell-input f-donedate" value="${item.doneDate||''}"></td>
+        <td><input type="text" class="cell-input f-memo" value="${item.memo||''}" placeholder="메모"></td>
+        <td class="exp-link-cell">${linkCellHtml}</td>
+      `;
+
+      tr.querySelector('.item-check').addEventListener('change', (ev) => {
+        item.done = ev.target.checked;
+        if(item.done && !item.doneDate) item.doneDate = todayStr();
+        if(!item.done) item.doneDate = '';
+        saveChecklist();
+      });
+      tr.querySelector('.f-vendor').addEventListener('change', e => { item.vendor = e.target.value; saveChecklist(); });
+      tr.querySelector('.f-phone').addEventListener('change', e => { item.phone = e.target.value; saveChecklist(); });
+      tr.querySelector('.f-donedate').addEventListener('change', e => { item.doneDate = e.target.value; saveChecklist(); });
+      tr.querySelector('.f-memo').addEventListener('change', e => { item.memo = e.target.value; saveChecklist(); });
+
+      const addBtn = tr.querySelector('.add-exp-from-item-btn');
+      if(addBtn) addBtn.addEventListener('click', () => addExpenseFromItem(s, item));
+      const viewBtn = tr.querySelector('.view-exp-btn');
+      if(viewBtn) viewBtn.addEventListener('click', () => jumpToExpense(item.expenseId));
+      const unlinkBtn = tr.querySelector('.unlink-exp-btn');
+      if(unlinkBtn) unlinkBtn.addEventListener('click', () => {
+        const exp = findExpense(item.expenseId);
+        if(exp){ exp.linkedStepId = null; exp.linkedItemId = null; }
+        item.expenseId = null;
+        saveChecklist();
+        saveExpenses();
+      });
+
+      tbody.appendChild(tr);
+    });
+
+    block.querySelector('.step-bar').addEventListener('click', () => {
+      block.classList.toggle('open');
+      block.querySelector('.outline-toggle').textContent = block.classList.contains('open') ? '−' : '+';
+    });
+
+    container.appendChild(block);
+  });
+}
+
+/* ============ 렌더: 지출 장부 ============ */
+function renderExpSummary(){
+  const totalBudget = expenses.reduce((sum,e)=> sum + (Number(e.total)||0), 0);
+  const totalPaid = expenses.reduce((sum,e)=> sum + (Number(e.deposit)||0)+(Number(e.interim)||0)+(Number(e.balance)||0), 0);
+  const remaining = totalBudget - totalPaid;
+  const unpaidCount = expenses.filter(e => paymentStatus(e).label !== '잔금완납').length;
+
+  $('#expSummary').innerHTML = `
+    <div class="summary-cell"><div class="label">총 예산 합계</div><div class="value">${fmtWon(totalBudget)}</div></div>
+    <div class="summary-cell accent"><div class="label">지금까지 납부액</div><div class="value">${fmtWon(totalPaid)}</div></div>
+    <div class="summary-cell warn"><div class="label">남은 잔액</div><div class="value">${fmtWon(Math.max(remaining,0))}</div></div>
+    <div class="summary-cell"><div class="label">미완납 건수</div><div class="value">${unpaidCount}건</div></div>
+  `;
+}
+
+function renderExpList(){
+  const tbody = $('#expTableBody');
+  const table = $('#expTable');
+  const emptyNote = $('#expEmptyNote');
+  tbody.innerHTML = '';
+
+  if(expenses.length === 0){
+    table.style.display = 'none';
+    emptyNote.style.display = 'block';
+    return;
+  }
+  table.style.display = '';
+  emptyNote.style.display = 'none';
+
+  const sorted = [...expenses].sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+
+  sorted.forEach(e => {
+    const status = paymentStatus(e);
+    const tr = document.createElement('tr');
+    tr.dataset.expId = e.id;
+
+    let linkText = '-';
+    if(e.linkedStepId!=null && e.linkedItemId!=null){
+      const {step, item} = findItem(e.linkedStepId, e.linkedItemId);
+      if(step && item) linkText = `${stepShortTitle(step)} · ${item.name}`;
+    }
+
+    tr.innerHTML = `
+      <td><input type="date" class="cell-input p-date" value="${e.date||''}"></td>
+      <td><input type="text" class="cell-input p-name" value="${e.name||''}" placeholder="항목명"></td>
+      <td><input type="text" class="cell-input p-vendor" value="${e.vendor||''}" placeholder="업체명"></td>
+      <td class="num"><input type="number" class="cell-input p-total" value="${e.total||0}"></td>
+      <td class="num"><input type="number" class="cell-input p-deposit" value="${e.deposit||0}"></td>
+      <td class="num"><input type="number" class="cell-input p-interim" value="${e.interim||0}"></td>
+      <td class="num"><input type="number" class="cell-input p-balance" value="${e.balance||0}"></td>
+      <td class="status-cell"><span class="chip ${status.cls}">${status.label}</span></td>
+      <td><input type="text" class="cell-input p-memo" value="${e.memo||''}" placeholder="메모"></td>
+      <td class="link-cell">${linkText}</td>
+      <td class="del-cell"><button class="del-icon-btn" title="삭제">✕</button></td>
+    `;
+
+    const bindNum = (cls, field) => tr.querySelector(cls).addEventListener('change', ev => {
+      e[field] = ev.target.value; saveExpenses();
+    });
+    tr.querySelector('.p-date').addEventListener('change', ev => { e.date = ev.target.value; saveExpenses(); });
+    tr.querySelector('.p-name').addEventListener('change', ev => { e.name = ev.target.value; saveExpenses(); });
+    tr.querySelector('.p-vendor').addEventListener('change', ev => { e.vendor = ev.target.value; saveExpenses(); });
+    bindNum('.p-total','total');
+    bindNum('.p-deposit','deposit');
+    bindNum('.p-interim','interim');
+    bindNum('.p-balance','balance');
+    tr.querySelector('.p-memo').addEventListener('change', ev => { e.memo = ev.target.value; saveExpenses(); });
+
+    tr.querySelector('.del-icon-btn').addEventListener('click', () => {
+      if(confirm(`'${e.name||'이 항목'}'을(를) 삭제할까요?`)){
+        if(e.linkedStepId!=null && e.linkedItemId!=null){
+          const {item} = findItem(e.linkedStepId, e.linkedItemId);
+          if(item){ item.expenseId = null; saveChecklist(); }
+        }
+        expenses = expenses.filter(x => x.id !== e.id);
+        saveExpenses();
+      }
+    });
+
+    tbody.appendChild(tr);
+  });
+}
+
+function addExpenseFromItem(step, item){
+  const newExp = {
+    id: uid(), name: item.name, vendor: item.vendor||'', date: todayStr(),
+    total:0, deposit:0, interim:0, balance:0, memo:'',
+    linkedStepId: step.id, linkedItemId: item.id
+  };
+  expenses.push(newExp);
+  item.expenseId = newExp.id;
+  saveChecklist();
+  saveExpenses();
+  pendingJumpExpId = newExp.id;
+  switchTab('expenses');
+}
+
+function jumpToExpense(expId){
+  switchTab('expenses');
+  requestAnimationFrame(() => scrollToExpense(expId));
+}
+
+function scrollToExpense(expId){
+  const rowEl = document.querySelector(`#expTableBody tr[data-exp-id="${expId}"]`);
+  if(rowEl){
+    rowEl.scrollIntoView({behavior:'smooth', block:'center'});
+    const totalInput = rowEl.querySelector('.p-total');
+    if(totalInput) totalInput.focus();
+  }
+}
+
+function switchTab(tab){
+  $$('.tab-btn').forEach(b=>b.classList.remove('active'));
+  $$('.panel').forEach(p=>p.classList.remove('active'));
+  $(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
+  $('#panel-' + tab).classList.add('active');
+}
+
+/* ============ 이벤트 바인딩 ============ */
+function bindTabs(){
+  $$('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+}
+
+function bindDateEdit(){
+  $('#editDateBtn').addEventListener('click', () => {
+    $('#dateEditRow').classList.toggle('open');
+  });
+  $('#saveDateBtn').addEventListener('click', async () => {
+    const v = $('#weddingDateInput').value;
+    if(v){
+      weddingDate = v;
+      await saveSettings();
+      $('#dateEditRow').classList.remove('open');
+    }
+  });
+}
+
+function bindAddExpRow(){
+  $('#addExpRowBtn').addEventListener('click', () => {
+    const newExp = { id: uid(), name:'', vendor:'', date: todayStr(), total:0, deposit:0, interim:0, balance:0, memo:'', linkedStepId:null, linkedItemId:null };
+    expenses.push(newExp);
+    saveExpenses();
+    pendingJumpExpId = newExp.id;
+    requestAnimationFrame(() => {
+      const rowEl = document.querySelector(`#expTableBody tr[data-exp-id="${newExp.id}"]`);
+      if(rowEl){
+        rowEl.scrollIntoView({behavior:'smooth', block:'center'});
+        const nameInput = rowEl.querySelector('.p-name');
+        if(nameInput) nameInput.focus();
+      }
+      pendingJumpExpId = null;
+    });
+  });
+}
+
+/* ============ 로그인 / 인증 ============ */
+function bindAuth(){
+  $('#loginBtn').addEventListener('click', doLogin);
+  $('#loginPassword').addEventListener('keydown', ev => { if(ev.key==='Enter') doLogin(); });
+  $('#logoutBtn').addEventListener('click', () => signOut(auth));
+
+  async function doLogin(){
+    const email = $('#loginEmail').value.trim();
+    const password = $('#loginPassword').value;
+    $('#loginError').textContent = '';
+    if(!email || !password){
+      $('#loginError').textContent = '이메일과 비밀번호를 입력해주세요.';
+      return;
+    }
+    try{
+      await signInWithEmailAndPassword(auth, email, password);
+    }catch(err){
+      $('#loginError').textContent = '로그인에 실패했어요. 이메일/비밀번호를 확인해주세요.';
+    }
+  }
+}
+
+function showApp(user){
+  $('#loginScreen').style.display = 'none';
+  $('#appRoot').style.display = 'block';
+  $('#userEmail').textContent = user.email || '';
+  startListeners();
+}
+function showLogin(){
+  unsubscribers.forEach(u => u());
+  unsubscribers = [];
+  steps = null; expenses = [];
+  $('#appRoot').style.display = 'none';
+  $('#loginScreen').style.display = 'flex';
+  $('#loginEmail').value = '';
+  $('#loginPassword').value = '';
+  $('#loginError').textContent = '';
+}
+
+/* ============ 초기화 ============ */
+bindTabs();
+bindDateEdit();
+bindAddExpRow();
+bindAuth();
+
+onAuthStateChanged(auth, (user) => {
+  if(user) showApp(user);
+  else showLogin();
+});
+</script>
+</body>
+</html>
