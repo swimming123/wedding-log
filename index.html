@@ -504,6 +504,7 @@ function startListeners(){
     expenses.forEach(e => {
       if(e.linkedStepId===undefined) e.linkedStepId = null;
       if(e.linkedItemId===undefined) e.linkedItemId = null;
+      if(e.totalAuto===undefined) e.totalAuto = true;
     });
     renderExpSummary();
     renderExpList();
@@ -744,27 +745,40 @@ function renderExpList(){
       <td><input type="date" class="cell-input p-date" value="${e.date||''}"></td>
       <td><input type="text" class="cell-input p-name" value="${e.name||''}" placeholder="항목명"></td>
       <td><input type="text" class="cell-input p-vendor" value="${e.vendor||''}" placeholder="업체명"></td>
-      <td class="num"><input type="number" class="cell-input p-total" value="${e.total||0}"></td>
-      <td class="num"><input type="number" class="cell-input p-deposit" value="${e.deposit||0}"></td>
-      <td class="num"><input type="number" class="cell-input p-interim" value="${e.interim||0}"></td>
-      <td class="num"><input type="number" class="cell-input p-balance" value="${e.balance||0}"></td>
+      <td class="num"><input type="number" class="cell-input p-total" value="${e.total||''}" placeholder="0"></td>
+      <td class="num"><input type="number" class="cell-input p-deposit" value="${e.deposit||''}" placeholder="0"></td>
+      <td class="num"><input type="number" class="cell-input p-interim" value="${e.interim||''}" placeholder="0"></td>
+      <td class="num"><input type="number" class="cell-input p-balance" value="${e.balance||''}" placeholder="0"></td>
       <td class="status-cell"><span class="chip ${status.cls}">${status.label}</span></td>
       <td><input type="text" class="cell-input p-memo" value="${e.memo||''}" placeholder="메모"></td>
       <td class="link-cell">${linkText}</td>
       <td class="del-cell"><button class="del-icon-btn" title="삭제">✕</button></td>
     `;
 
-    const bindNum = (cls, field) => tr.querySelector(cls).addEventListener('change', ev => {
-      e[field] = ev.target.value; saveExpenses();
-    });
     tr.querySelector('.p-date').addEventListener('change', ev => { e.date = ev.target.value; saveExpenses(); });
     tr.querySelector('.p-name').addEventListener('change', ev => { e.name = ev.target.value; saveExpenses(); });
     tr.querySelector('.p-vendor').addEventListener('change', ev => { e.vendor = ev.target.value; saveExpenses(); });
-    bindNum('.p-total','total');
-    bindNum('.p-deposit','deposit');
-    bindNum('.p-interim','interim');
-    bindNum('.p-balance','balance');
+
+    // 총금액은 직접 입력할 수도 있고, 비워두면(자동 모드) 계약금+중도금+잔금 합계를 자동으로 반영해요.
+    const recalcTotalIfAuto = () => {
+      if(e.totalAuto !== false){
+        e.total = (Number(e.deposit)||0) + (Number(e.interim)||0) + (Number(e.balance)||0);
+      }
+    };
+    tr.querySelector('.p-total').addEventListener('change', ev => {
+      e.total = ev.target.value;
+      e.totalAuto = false; // 사용자가 직접 총금액을 적으면 이후로는 자동 합산을 멈춤
+      saveExpenses();
+    });
+    tr.querySelector('.p-deposit').addEventListener('change', ev => { e.deposit = ev.target.value; recalcTotalIfAuto(); saveExpenses(); });
+    tr.querySelector('.p-interim').addEventListener('change', ev => { e.interim = ev.target.value; recalcTotalIfAuto(); saveExpenses(); });
+    tr.querySelector('.p-balance').addEventListener('change', ev => { e.balance = ev.target.value; recalcTotalIfAuto(); saveExpenses(); });
     tr.querySelector('.p-memo').addEventListener('change', ev => { e.memo = ev.target.value; saveExpenses(); });
+
+    // 숫자 칸에 포커스하면 기존 값이 전체 선택돼서, 바로 타이핑해도 앞에 0이 안 남아요.
+    ['.p-total','.p-deposit','.p-interim','.p-balance'].forEach(sel => {
+      tr.querySelector(sel).addEventListener('focus', function(){ this.select(); });
+    });
 
     tr.querySelector('.del-icon-btn').addEventListener('click', () => {
       if(confirm(`'${e.name||'이 항목'}'을(를) 삭제할까요?`)){
@@ -784,7 +798,7 @@ function renderExpList(){
 function addExpenseFromItem(step, item){
   const newExp = {
     id: uid(), name: item.name, vendor: item.vendor||'', date: todayStr(),
-    total:0, deposit:0, interim:0, balance:0, memo:'',
+    total:0, deposit:0, interim:0, balance:0, memo:'', totalAuto:true,
     linkedStepId: step.id, linkedItemId: item.id
   };
   expenses.push(newExp);
@@ -839,7 +853,7 @@ function bindDateEdit(){
 
 function bindAddExpRow(){
   $('#addExpRowBtn').addEventListener('click', () => {
-    const newExp = { id: uid(), name:'', vendor:'', date: todayStr(), total:0, deposit:0, interim:0, balance:0, memo:'', linkedStepId:null, linkedItemId:null };
+    const newExp = { id: uid(), name:'', vendor:'', date: todayStr(), total:0, deposit:0, interim:0, balance:0, memo:'', totalAuto:true, linkedStepId:null, linkedItemId:null };
     expenses.push(newExp);
     saveExpenses();
     pendingJumpExpId = newExp.id;
