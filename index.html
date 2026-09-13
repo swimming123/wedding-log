@@ -142,6 +142,11 @@
     padding:2px; border-radius:3px;
   }
   .step-months-input:focus{ outline:2px solid var(--primary); outline-offset:-2px; background:#fff; color:var(--text); }
+  .step-duedate-input{
+    border:none; background:transparent; font:inherit; color:var(--text-secondary);
+    padding:2px 3px; border-radius:3px;
+  }
+  .step-duedate-input:focus{ outline:2px solid var(--primary); outline-offset:-2px; background:#fff; color:var(--text); }
   .step-del-btn{
     background:none; border:none; color:#BDBDBD; font-size:14px; cursor:pointer; padding:2px 5px; flex:0 0 auto;
   }
@@ -651,7 +656,7 @@ function renderTimeline(){
         <span class="outline-toggle">${shouldOpen ? '−' : '+'}</span>
         <span class="step-num">Step ${idx+1}</span>
         <input type="text" class="step-name-input" value="${s.name||''}" placeholder="단계 이름">
-        <span class="step-when-edit">D-<input type="number" step="0.5" min="0" class="step-months-input" value="${s.monthsBefore}">개월 전 · ${fmtDate(info.dueDate.toISOString().slice(0,10))} 까지</span>
+        <span class="step-when-edit">D-<input type="number" step="0.5" min="0" class="step-months-input" value="${s.monthsBefore}">개월 전 · <input type="date" class="step-duedate-input" value="${info.dueDate.toISOString().slice(0,10)}"> 까지</span>
         <span class="step-bar-spacer"></span>
         ${stepSpend>0 ? `<span class="spend-mini">${fmtWon(stepSpend)}</span>` : ''}
         <span class="progress-mini">${info.done}/${info.total}</span>
@@ -764,9 +769,24 @@ function renderTimeline(){
 
     const monthsInput = block.querySelector('.step-months-input');
     monthsInput.addEventListener('click', ev => ev.stopPropagation());
+    monthsInput.addEventListener('focus', function(){ this.select(); });
     monthsInput.addEventListener('change', ev => {
       const v = parseFloat(ev.target.value);
       s.monthsBefore = isNaN(v) ? 0 : v;
+      forceOpenStepId = s.id;
+      sortStepsByDate();
+      saveChecklist();
+    });
+
+    const dueDateInput = block.querySelector('.step-duedate-input');
+    dueDateInput.addEventListener('click', ev => ev.stopPropagation());
+    dueDateInput.addEventListener('change', ev => {
+      const picked = ev.target.value;
+      if(!picked) return;
+      const wD = new Date(weddingDate + 'T00:00:00');
+      const pD = new Date(picked + 'T00:00:00');
+      const days = daysBetween(pD, wD);
+      s.monthsBefore = Math.round((days/30.4368)*10)/10;
       forceOpenStepId = s.id;
       sortStepsByDate();
       saveChecklist();
