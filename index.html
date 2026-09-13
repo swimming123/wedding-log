@@ -130,6 +130,25 @@
   }
   .step-title{ font-weight:500; font-size:13.5px; color:var(--text); }
   .step-when{ font-size:12px; color:var(--text-secondary); }
+  .step-num{ font-size:12px; color:var(--text-secondary); font-weight:500; flex:0 0 auto; }
+  .step-name-input{
+    border:none; background:transparent; font-weight:500; font-size:13.5px; color:var(--text);
+    padding:3px 5px; border-radius:3px; width:170px; min-width:90px;
+  }
+  .step-name-input:focus{ outline:2px solid var(--primary); outline-offset:-2px; background:#fff; }
+  .step-when-edit{ font-size:12px; color:var(--text-secondary); display:flex; align-items:center; gap:3px; white-space:nowrap; }
+  .step-months-input{
+    width:42px; border:none; background:transparent; font:inherit; color:var(--text-secondary); text-align:center;
+    padding:2px; border-radius:3px;
+  }
+  .step-months-input:focus{ outline:2px solid var(--primary); outline-offset:-2px; background:#fff; color:var(--text); }
+  .step-del-btn{
+    background:none; border:none; color:#BDBDBD; font-size:14px; cursor:pointer; padding:2px 5px; flex:0 0 auto;
+  }
+  .step-del-btn:hover{ color:var(--error); }
+  .add-item-row td{ padding:8px 10px; background:#FAFAFA; }
+  .del-item-cell{ text-align:center; width:30px; }
+  .name-done-input{ text-decoration:line-through; color:var(--text-secondary); }
   .step-bar-spacer{ flex:1 1 auto; }
   .chip{ font-size:11px; font-weight:500; padding:3px 9px; border-radius:10px; white-space:nowrap; }
   .chip-done{ background:var(--success-bg); color:var(--success); }
@@ -289,6 +308,7 @@
 
     <div class="panel active" id="panel-timeline">
       <div id="timelineList"></div>
+      <button class="add-row-btn" id="addStepBtn">+ 새 단계 추가</button>
     </div>
 
     <div class="panel" id="panel-expenses">
@@ -346,14 +366,14 @@ const expensesRef = doc(db, "app", "expenses");
 const DEFAULT_WEDDING_DATE = "2027-06-13";
 
 const DEFAULT_STEPS = [
-  { id:1, title:"Step 1 · Pre-Wedding", monthsBefore:15, when:"D-1년 3개월", desc:"양가인사 · 선물준비 · 계획세우기",
+  { id:1, name:"Pre-Wedding", monthsBefore:15, desc:"양가인사 · 선물준비 · 계획세우기",
     items:[
       {name:"양가인사 날잡기", desc:"상견례까진 아니더라도 양가인사는!"},
       {name:"양가인사 선물준비", desc:"한정선, 꽃바구니 추천"},
       {name:"양가인사", desc:"보통 예약은 양가 부모님이"},
       {name:"스드메 업체선정", desc:"이때는 업체별 비교만 먼저", vendor:"컬러인웨딩"}
     ]},
-  { id:2, title:"Step 2 · Hall", monthsBefore:12, when:"D-1년", desc:"홀투어 · 홀관련예약 · 플래너계약",
+  { id:2, name:"Hall", monthsBefore:12, desc:"홀투어 · 홀관련예약 · 플래너계약",
     items:[
       {name:"암행홀투어", desc:"보통 당일계약 혜택이 커요. 맘에 드는 곳은 미리 가보는 걸 추천"},
       {name:"홀 계약", desc:"홀 계약시 부가 서비스 꼼꼼히 따지기"},
@@ -361,7 +381,7 @@ const DEFAULT_STEPS = [
       {name:"홀 본식DVD 계약", desc:"홀 연계여부 필수 확인"},
       {name:"플래너 계약", desc:"다이렉트웨딩 추천"}
     ]},
-  { id:3, title:"Step 3 · 스드메", monthsBefore:10, when:"D-10개월", desc:"스드메 · 예복 및 관련 예약(헤어변형 등)",
+  { id:3, name:"스드메", monthsBefore:10, desc:"스드메 · 예복 및 관련 예약(헤어변형 등)",
     items:[
       {name:"스튜디오 확정", desc:""},
       {name:"ㄴ 헤어변형 contact", desc:"스튜디오 확정하자마자"},
@@ -369,34 +389,34 @@ const DEFAULT_STEPS = [
       {name:"메이크업 확정", desc:"원하면 데모메이크업 잡기"},
       {name:"예복 업체 확정", desc:"스튜디오 촬영 3개월 전에 필수"}
     ]},
-  { id:4, title:"Step 4 · 신혼준비", monthsBefore:7, when:"D-7개월", desc:"신혼여행 · 신혼집 준비",
+  { id:4, name:"신혼준비", monthsBefore:7, desc:"신혼여행 · 신혼집 준비",
     items:[
       {name:"신혼집 투어 · 계약", desc:"신혼집은 빨리 구하는 게 좋아요"},
       {name:"신혼여행 항공권", desc:"1년~7개월 전이 가장 저렴"},
       {name:"신혼여행 호텔", desc:"무료취소 가능한 곳 선점"},
       {name:"촬영 드레스 가봉", desc:"스튜디오 촬영 1개월 전 추천"}
     ]},
-  { id:5, title:"Step 5 · 스튜디오 촬영", monthsBefore:6, when:"D-6개월", desc:"스튜디오 촬영 및 관련 준비",
+  { id:5, name:"스튜디오 촬영", monthsBefore:6, desc:"스튜디오 촬영 및 관련 준비",
     items:[
       {name:"촬영시연 준비", desc:""},
       {name:"촬영장 소품준비", desc:""},
       {name:"헤어변형 체크", desc:""}
     ]},
-  { id:6, title:"Step 6 · 청첩장 · 양가부모님", monthsBefore:3.5, when:"D-3~4개월", desc:"상견례 · 혼주한복 · 청첩장 제작",
+  { id:6, name:"청첩장 · 양가부모님", monthsBefore:3.5, desc:"상견례 · 혼주한복 · 청첩장 제작",
     items:[
       {name:"상견례", desc:"양가 상견례 일정 · 장소 잡기"},
       {name:"혼주한복 준비", desc:"혼주(부모님) 한복 맞춤"},
       {name:"청첩장 디자인 · 제작", desc:"시안 선택 및 제작 의뢰"},
       {name:"모바일 청첩장 제작", desc:"모바일 청첩장 함께 준비"}
     ]},
-  { id:7, title:"Step 7 · Hall 관련 준비들", monthsBefore:2, when:"D-2개월", desc:"식전영상 · 식권대장 · 답례품준비",
+  { id:7, name:"Hall 관련 준비들", monthsBefore:2, desc:"식전영상 · 식권대장 · 답례품준비",
     items:[
       {name:"식전영상 제작", desc:"업체 or 셀프 제작"},
       {name:"식권대장 준비", desc:"하객 식사 인원 파악 및 예약"},
       {name:"답례품 준비", desc:"종류 · 수량 결정 및 주문"},
       {name:"청첩장 발송 시작", desc:"지인 · 직장 발송"}
     ]},
-  { id:8, title:"Step 8 · 본식 위한 최종 Check", monthsBefore:1, when:"D-1개월", desc:"본식드레스가봉 · 웨딩홀미팅(리허설 등)",
+  { id:8, name:"본식 위한 최종 Check", monthsBefore:1, desc:"본식드레스가봉 · 웨딩홀미팅(리허설 등)",
     items:[
       {name:"본식 드레스 가봉", desc:"최종 피팅 확인"},
       {name:"웨딩홀 최종 미팅", desc:"식순 · 리허설 협의"},
@@ -412,6 +432,11 @@ let steps = null;
 let expenses = [];
 let unsubscribers = [];
 let pendingJumpExpId = null;
+let forceOpenStepId = null;
+
+function sortStepsByDate(){
+  steps.sort((a,b)=> (Number(b.monthsBefore)||0) - (Number(a.monthsBefore)||0));
+}
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
@@ -449,7 +474,17 @@ function findItem(stepId, itemId){
   const item = step.items.find(i => i.id === itemId);
   return {step, item};
 }
-function stepShortTitle(step){ return step.title.replace(/^Step\s*\d+\s*·\s*/,''); }
+function stepShortTitle(step){ return step.name; }
+function monthsBeforeLabel(m){
+  m = Number(m)||0;
+  if(m <= 0) return 'D-DAY';
+  const y = Math.floor(m/12);
+  const rem = Math.round((m - y*12)*10)/10;
+  let label = 'D-';
+  if(y>0) label += `${y}년 `;
+  if(rem>0 || y===0) label += `${rem}개월`;
+  return label.trim();
+}
 
 /* ============ Firestore 저장 ============ */
 async function saveSettings(){
@@ -490,7 +525,11 @@ function startListeners(){
   unsubscribers.push(onSnapshot(checklistRef, snap => {
     if(snap.exists() && Array.isArray(snap.data().steps) && snap.data().steps.length){
       steps = snap.data().steps;
-      steps.forEach(s => s.items.forEach(it => { if(it.expenseId===undefined) it.expenseId = null; }));
+      steps.forEach(s => {
+        if(s.name===undefined) s.name = (s.title||'').replace(/^Step\s*\d+\s*·\s*/,'') || '단계';
+        s.items.forEach(it => { if(it.expenseId===undefined) it.expenseId = null; });
+      });
+      sortStepsByDate();
     }else{
       steps = buildDefaultSteps();
       saveChecklist();
@@ -551,8 +590,8 @@ function renderHero(){
   $('#nowLabel').textContent = '지금 할 일';
   $('#nowStepName').textContent = `${stepShortTitle(cur)} — ${cur.desc}`;
   $('#nowStepSub').textContent = remain > 0
-    ? `${cur.when} 단계 · 남은 항목 ${remain}개`
-    : `${cur.when} 단계 · 이 단계는 모두 완료했어요`;
+    ? `${monthsBeforeLabel(cur.monthsBefore)} 단계 · 남은 항목 ${remain}개`
+    : `${monthsBeforeLabel(cur.monthsBefore)} 단계 · 이 단계는 모두 완료했어요`;
 }
 
 /* ============ 렌더: 타임라인 ============ */
@@ -595,7 +634,7 @@ function renderTimeline(){
     const block = document.createElement('div');
     block.className = 'step-block block';
     block.dataset.stepId = s.id;
-    const shouldOpen = hadAny ? openIds.has(String(s.id)) : (idx === currentIdx);
+    const shouldOpen = (hadAny ? openIds.has(String(s.id)) : (idx === currentIdx)) || String(s.id) === String(forceOpenStepId);
     if(shouldOpen) block.classList.add('open');
 
     let chipHtml = '';
@@ -610,23 +649,26 @@ function renderTimeline(){
     block.innerHTML = `
       <div class="step-bar">
         <span class="outline-toggle">${shouldOpen ? '−' : '+'}</span>
-        <span class="step-title">${s.title}</span>
-        <span class="step-when">${s.when} · ${fmtDate(info.dueDate.toISOString().slice(0,10))} 까지</span>
+        <span class="step-num">Step ${idx+1}</span>
+        <input type="text" class="step-name-input" value="${s.name||''}" placeholder="단계 이름">
+        <span class="step-when-edit">D-<input type="number" step="0.5" min="0" class="step-months-input" value="${s.monthsBefore}">개월 전 · ${fmtDate(info.dueDate.toISOString().slice(0,10))} 까지</span>
         <span class="step-bar-spacer"></span>
         ${stepSpend>0 ? `<span class="spend-mini">${fmtWon(stepSpend)}</span>` : ''}
         <span class="progress-mini">${info.done}/${info.total}</span>
         ${chipHtml}
+        <button class="step-del-btn" title="이 단계 삭제">✕</button>
       </div>
       <div class="step-body">
         <div class="table-scroll">
           <table class="sheet">
             <thead>
               <tr>
-                <th></th><th>구분</th><th>설명</th><th>확정 업체명</th><th>업체 연락처</th><th>완료일</th><th>메모</th><th>지출</th>
+                <th></th><th>구분</th><th>설명</th><th>확정 업체명</th><th>업체 연락처</th><th>완료일</th><th>메모</th><th>지출</th><th></th>
               </tr>
             </thead>
             <tbody></tbody>
           </table>
+          <button class="add-row-btn add-item-btn" style="margin:8px 10px 10px;">+ 항목 추가</button>
         </div>
       </div>
     `;
@@ -654,13 +696,14 @@ function renderTimeline(){
 
       tr.innerHTML = `
         <td class="check-cell"><input type="checkbox" class="item-check" ${item.done?'checked':''}></td>
-        <td class="static-cell"><span class="${item.done?'name-done':''}">${item.name}</span></td>
-        <td class="static-cell muted">${item.desc || ''}</td>
+        <td><input type="text" class="cell-input f-name ${item.done?'name-done-input':''}" value="${item.name||''}" placeholder="항목명"></td>
+        <td><input type="text" class="cell-input f-desc" value="${item.desc||''}" placeholder="설명"></td>
         <td><input type="text" class="cell-input f-vendor" value="${item.vendor||''}" placeholder="업체명"></td>
         <td><input type="text" class="cell-input f-phone" value="${item.phone||''}" placeholder="010-0000-0000"></td>
         <td><input type="date" class="cell-input f-donedate" value="${item.doneDate||''}"></td>
         <td><input type="text" class="cell-input f-memo" value="${item.memo||''}" placeholder="메모"></td>
         <td class="exp-link-cell">${linkCellHtml}</td>
+        <td class="del-item-cell"><button class="del-icon-btn del-item-btn" title="항목 삭제">✕</button></td>
       `;
 
       tr.querySelector('.item-check').addEventListener('change', (ev) => {
@@ -669,6 +712,8 @@ function renderTimeline(){
         if(!item.done) item.doneDate = '';
         saveChecklist();
       });
+      tr.querySelector('.f-name').addEventListener('change', e => { item.name = e.target.value; saveChecklist(); });
+      tr.querySelector('.f-desc').addEventListener('change', e => { item.desc = e.target.value; saveChecklist(); });
       tr.querySelector('.f-vendor').addEventListener('change', e => { item.vendor = e.target.value; saveChecklist(); });
       tr.querySelector('.f-phone').addEventListener('change', e => { item.phone = e.target.value; saveChecklist(); });
       tr.querySelector('.f-donedate').addEventListener('change', e => { item.doneDate = e.target.value; saveChecklist(); });
@@ -686,8 +731,60 @@ function renderTimeline(){
         saveChecklist();
         saveExpenses();
       });
+      tr.querySelector('.del-item-btn').addEventListener('click', () => {
+        if(confirm(`'${item.name||'이 항목'}'을(를) 삭제할까요?`)){
+          if(item.expenseId){
+            const exp = findExpense(item.expenseId);
+            if(exp){ exp.linkedStepId = null; exp.linkedItemId = null; saveExpenses(); }
+          }
+          s.items = s.items.filter(x => x.id !== item.id);
+          forceOpenStepId = s.id;
+          saveChecklist();
+        }
+      });
 
       tbody.appendChild(tr);
+    });
+
+    block.querySelector('.add-item-btn').addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const newItem = { id: uid(), name:'', desc:'', vendor:'', phone:'', done:false, doneDate:'', memo:'', expenseId:null };
+      s.items.push(newItem);
+      forceOpenStepId = s.id;
+      saveChecklist();
+    });
+
+    const nameInput = block.querySelector('.step-name-input');
+    nameInput.addEventListener('click', ev => ev.stopPropagation());
+    nameInput.addEventListener('change', ev => {
+      s.name = ev.target.value;
+      forceOpenStepId = s.id;
+      saveChecklist();
+    });
+
+    const monthsInput = block.querySelector('.step-months-input');
+    monthsInput.addEventListener('click', ev => ev.stopPropagation());
+    monthsInput.addEventListener('change', ev => {
+      const v = parseFloat(ev.target.value);
+      s.monthsBefore = isNaN(v) ? 0 : v;
+      forceOpenStepId = s.id;
+      sortStepsByDate();
+      saveChecklist();
+    });
+
+    block.querySelector('.step-del-btn').addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      if(confirm(`'${s.name||'이 단계'}' 전체를 삭제할까요? 이 단계의 모든 항목이 함께 삭제돼요.`)){
+        s.items.forEach(item => {
+          if(item.expenseId){
+            const exp = findExpense(item.expenseId);
+            if(exp){ exp.linkedStepId = null; exp.linkedItemId = null; }
+          }
+        });
+        steps = steps.filter(x => x.id !== s.id);
+        saveChecklist();
+        saveExpenses();
+      }
     });
 
     block.querySelector('.step-bar').addEventListener('click', () => {
@@ -697,6 +794,8 @@ function renderTimeline(){
 
     container.appendChild(block);
   });
+
+  forceOpenStepId = null;
 }
 
 /* ============ 렌더: 지출 장부 ============ */
@@ -851,6 +950,21 @@ function bindDateEdit(){
   });
 }
 
+function bindAddStep(){
+  $('#addStepBtn').addEventListener('click', () => {
+    if(!steps) return;
+    const minMonths = steps.length ? Math.min(...steps.map(s=>Number(s.monthsBefore)||0)) : 1;
+    const newStep = {
+      id: uid(), name:'새 단계', monthsBefore: Math.max(0, minMonths - 1), desc:'',
+      items: []
+    };
+    steps.push(newStep);
+    sortStepsByDate();
+    forceOpenStepId = newStep.id;
+    saveChecklist();
+  });
+}
+
 function bindAddExpRow(){
   $('#addExpRowBtn').addEventListener('click', () => {
     const newExp = { id: uid(), name:'', vendor:'', date: todayStr(), total:0, deposit:0, interim:0, balance:0, memo:'', totalAuto:true, linkedStepId:null, linkedItemId:null };
@@ -911,6 +1025,7 @@ function showLogin(){
 /* ============ 초기화 ============ */
 bindTabs();
 bindDateEdit();
+bindAddStep();
 bindAddExpRow();
 bindAuth();
 
