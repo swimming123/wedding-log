@@ -246,6 +246,61 @@
 
   .empty-note{ text-align:center; color:var(--text-secondary); font-size:13px; padding:30px 10px; border:1px dashed var(--border); border-radius:4px; }
 
+  /* ---------- 시안(무드보드) ---------- */
+  .mb-tabbar{ display:flex; align-items:flex-end; gap:4px; flex-wrap:wrap; }
+  .mb-tab{
+    font-size:12.5px; padding:7px 10px; border-radius:4px 4px 0 0; cursor:pointer;
+    border:1px solid var(--border); border-bottom:none; background:var(--header-fill);
+    color:var(--text-secondary); display:flex; align-items:center; gap:6px;
+  }
+  .mb-tab.active{ background:var(--surface); color:var(--text); font-weight:500; }
+  .mb-tab-x{ width:14px; height:14px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:10px; color:var(--text-secondary); }
+  .mb-tab-x:hover{ background:var(--error-bg); color:var(--error); }
+  .mb-tab-add{ font-weight:700; }
+  .mb-tab-name-input{ font-size:12.5px; border:none; background:transparent; width:74px; font:inherit; color:var(--text); }
+  .mb-tab-name-input:focus{ outline:2px solid var(--primary); outline-offset:-2px; background:#fff; }
+  .mb-panel{ padding:16px; border-radius:0 4px 4px 4px; }
+  .mb-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+  .mb-toolbar .hint{ font-size:12.5px; color:var(--text-secondary); }
+  .mb-sec-ctrl{ display:flex; align-items:center; gap:6px; }
+  .mb-sec-ctrl button{ padding:4px 9px; font-size:13px; }
+  .mb-sec-ctrl span{ font-size:12px; color:var(--text-secondary); min-width:52px; text-align:center; display:inline-block; }
+  .mb-board-frame{ width:100%; max-width:820px; aspect-ratio:297/210; margin:0 auto; }
+  .mb-board-row{ display:flex; flex-direction:row; gap:12px; height:100%; }
+  .mb-col{ flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:4px; height:100%; }
+  .mb-title-input{
+    width:100%; box-sizing:border-box; border:none; background:transparent; font-size:13px;
+    font-weight:500; padding:3px 4px; color:var(--text); flex:0 0 22px; border-radius:3px;
+  }
+  .mb-title-input:focus{ outline:2px solid var(--primary); outline-offset:-2px; background:#fff; }
+  .mb-sub-row{ flex:2 1 0; min-height:0; display:flex; flex-direction:row; gap:4px; }
+  .mb-slot{
+    position:relative; width:100%; height:100%; border:1px solid var(--border); border-radius:4px;
+    overflow:hidden; background:#FAFAFA; cursor:pointer; box-sizing:border-box; min-width:0; min-height:0;
+  }
+  .mb-slot.selected{ border:2px solid var(--primary); }
+  .mb-slot.dragover{ border-color:var(--primary); background:var(--primary-light); }
+  .mb-photo{ width:100%; height:100%; object-fit:cover; display:block; }
+  .mb-placeholder{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;
+    color:var(--text-secondary); gap:2px; font-size:10.5px; text-align:center; padding:0 4px;
+  }
+  .mb-remove{
+    position:absolute; top:2px; right:2px; width:16px; height:16px; border-radius:50%;
+    background:#fff; border:1px solid var(--border); display:flex; align-items:center; justify-content:center;
+    cursor:pointer; padding:0; font-size:10px; color:var(--text-secondary); line-height:1;
+  }
+  .mb-remove:hover{ color:var(--error); border-color:var(--error-bg); }
+  .mb-kb-tag{
+    position:absolute; bottom:2px; left:2px; font-size:9px; background:rgba(255,255,255,0.9);
+    padding:1px 4px; border-radius:3px; color:var(--text-secondary);
+  }
+  .mb-caption{
+    width:100%; height:100%; box-sizing:border-box; resize:none; border:1px solid var(--border);
+    border-radius:4px; padding:6px 8px; font:inherit; font-size:12px; background:#fff; color:var(--text);
+  }
+  .mb-caption:focus{ outline:none; border-color:var(--primary); }
+
   footer{ text-align:center; font-size:11px; color:var(--text-secondary); margin-top:30px; }
 
   @media (max-width:640px){
@@ -311,6 +366,7 @@
     <div class="tabs">
       <button class="tab-btn active" data-tab="timeline">타임라인 · 체크리스트</button>
       <button class="tab-btn" data-tab="expenses">지출 장부</button>
+      <button class="tab-btn" data-tab="moodboard">시안</button>
     </div>
 
     <div class="panel active" id="panel-timeline">
@@ -338,6 +394,26 @@
       <button class="add-row-btn" id="addExpRowBtn">+ 새 지출 행 추가</button>
     </div>
 
+    <div class="panel" id="panel-moodboard">
+      <div class="mb-tabbar" id="mbTabBar"></div>
+      <div class="mb-panel block">
+        <div class="mb-toolbar">
+          <span class="hint">사진 칸을 클릭해 선택한 뒤 드래그하거나 Ctrl+V로 붙여넣으세요 · 보드 이름은 더블클릭해서 수정</span>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <div class="mb-sec-ctrl">
+              <button id="mbSecMinus" class="btn-ghost">－</button>
+              <span id="mbSecCount">3개 섹션</span>
+              <button id="mbSecPlus" class="btn-ghost">＋</button>
+            </div>
+            <button id="mbClearBtn" class="btn-ghost">이 보드 지우기</button>
+          </div>
+        </div>
+        <div class="mb-board-frame">
+          <div class="mb-board-row" id="mbBoardRow"></div>
+        </div>
+      </div>
+    </div>
+
     <footer>변경 내용은 Firestore에 실시간으로 저장·동기화돼요.</footer>
   </div>
 </div>
@@ -348,7 +424,7 @@ import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 import {
-  getFirestore, doc, setDoc, onSnapshot
+  getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
 /* ============ Firebase 초기화 ============ */
@@ -368,6 +444,9 @@ const db = getFirestore(fbApp);
 const settingsRef = doc(db, "app", "settings");
 const checklistRef = doc(db, "app", "checklist");
 const expensesRef = doc(db, "app", "expenses");
+const mbBoardsCol = collection(db, "moodboardBoards");
+const mbSectionsCol = collection(db, "moodboardSections");
+
 
 /* ============ 기본 데이터 ============ */
 const DEFAULT_WEDDING_DATE = "2027-06-13";
@@ -441,6 +520,14 @@ let unsubscribers = [];
 let pendingJumpExpId = null;
 let forceOpenStepId = null;
 
+// 시안(무드보드) 상태
+let mbBoards = [];
+let mbSections = [];
+let mbActiveBoardId = null;
+let mbSelectedKey = null;
+let mbEditingBoardId = null;
+let mbSeeded = false;
+
 function sortStepsByDate(){
   steps.sort((a,b)=> (Number(b.monthsBefore)||0) - (Number(a.monthsBefore)||0));
 }
@@ -449,6 +536,30 @@ const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function compressImage(fileOrBlob){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const maxW = 700;
+        const scale = Math.min(1, maxW / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const url = canvas.toDataURL('image/jpeg', 0.65);
+        const kb = Math.round((url.length * 0.75) / 1024);
+        resolve({url, kb});
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(fileOrBlob);
+  });
+}
 function fmtWon(n){ n = Number(n)||0; return n.toLocaleString('ko-KR') + '원'; }
 function fmtDate(d){
   if(!d) return '';
@@ -507,6 +618,48 @@ async function saveExpenses(){
   catch(e){ console.error('expenses save failed', e); }
 }
 
+/* ============ 시안(무드보드) Firestore 저장/삭제 ============ */
+function emptyMbSection(boardId, order){
+  return {
+    id: uid(), boardId, order, title:'', caption:'',
+    main:{image:null, kb:null},
+    subs:[{image:null,kb:null},{image:null,kb:null},{image:null,kb:null}]
+  };
+}
+function createMbBoard(order){
+  return { id: uid(), name: '보드 '+(order+1), order };
+}
+async function saveMbBoard(board){
+  try{ await setDoc(doc(db, 'moodboardBoards', board.id), board); }
+  catch(e){ console.error('board save failed', e); }
+}
+async function saveMbSection(section){
+  try{ await setDoc(doc(db, 'moodboardSections', section.id), section); }
+  catch(e){ console.error('section save failed', e); }
+}
+async function deleteMbSection(sectionId){
+  try{ await deleteDoc(doc(db, 'moodboardSections', sectionId)); }
+  catch(e){ console.error('section delete failed', e); }
+}
+async function deleteMbBoard(boardId){
+  try{
+    await deleteDoc(doc(db, 'moodboardBoards', boardId));
+    const toDelete = mbSections.filter(s => s.boardId === boardId);
+    await Promise.all(toDelete.map(s => deleteMbSection(s.id)));
+  }catch(e){ console.error('board delete failed', e); }
+}
+function mbBoardSections(boardId){
+  return mbSections.filter(s => s.boardId === boardId).sort((a,b)=> a.order-b.order);
+}
+async function seedFirstMbBoardIfEmpty(){
+  if(mbSeeded) return;
+  mbSeeded = true;
+  const board = createMbBoard(0);
+  await saveMbBoard(board);
+  const sections = [0,1,2].map(i => emptyMbSection(board.id, i));
+  await Promise.all(sections.map(saveMbSection));
+}
+
 function buildDefaultSteps(){
   return DEFAULT_STEPS.map(s => ({
     ...s,
@@ -561,6 +714,25 @@ function startListeners(){
       requestAnimationFrame(() => scrollToExpense(id));
     }
   }, err => console.error('expenses listener error', err)));
+
+  unsubscribers.push(onSnapshot(mbBoardsCol, snap => {
+    mbBoards = snap.docs.map(d => d.data()).sort((a,b)=> a.order-b.order);
+    if(mbBoards.length === 0){
+      seedFirstMbBoardIfEmpty();
+    }else if(!mbActiveBoardId || !mbBoards.find(b => b.id === mbActiveBoardId)){
+      mbActiveBoardId = mbBoards[0].id;
+    }
+    renderMoodboard();
+  }, err => console.error('moodboard boards listener error', err)));
+
+  unsubscribers.push(onSnapshot(mbSectionsCol, snap => {
+    mbSections = snap.docs.map(d => d.data());
+    mbSections.forEach(s => {
+      if(!s.main) s.main = {image:null, kb:null};
+      if(!s.subs) s.subs = [{image:null,kb:null},{image:null,kb:null},{image:null,kb:null}];
+    });
+    renderMoodboard();
+  }, err => console.error('moodboard sections listener error', err)));
 }
 
 /* ============ 렌더: 요약 ============ */
@@ -954,10 +1126,259 @@ function switchTab(tab){
   $('#panel-' + tab).classList.add('active');
 }
 
+/* ============ 렌더: 시안(무드보드) ============ */
+function mbActiveBoard(){ return mbBoards.find(b => b.id === mbActiveBoardId) || null; }
+
+function renderMbTabs(){
+  const bar = $('#mbTabBar');
+  bar.innerHTML = '';
+  mbBoards.forEach(b => {
+    const tab = document.createElement('div');
+    tab.className = 'mb-tab' + (b.id === mbActiveBoardId ? ' active' : '');
+
+    if(mbEditingBoardId === b.id){
+      const nameInput = document.createElement('input');
+      nameInput.className = 'mb-tab-name-input';
+      nameInput.value = b.name;
+      tab.appendChild(nameInput);
+      const commit = () => {
+        const v = nameInput.value.trim();
+        if(v && v !== b.name){ b.name = v; saveMbBoard(b); }
+        mbEditingBoardId = null;
+        renderMbTabs();
+      };
+      nameInput.addEventListener('keydown', ev => {
+        if(ev.key === 'Enter') commit();
+        if(ev.key === 'Escape'){ mbEditingBoardId = null; renderMbTabs(); }
+      });
+      nameInput.addEventListener('blur', commit);
+      nameInput.addEventListener('click', ev => ev.stopPropagation());
+      setTimeout(() => { nameInput.focus(); nameInput.select(); }, 0);
+    }else{
+      const label = document.createElement('span');
+      label.textContent = b.name;
+      label.addEventListener('dblclick', ev => {
+        ev.stopPropagation();
+        mbEditingBoardId = b.id;
+        renderMbTabs();
+      });
+      tab.appendChild(label);
+    }
+
+    if(mbBoards.length > 1){
+      const x = document.createElement('span');
+      x.className = 'mb-tab-x';
+      x.textContent = '✕';
+      x.title = '보드 삭제';
+      x.addEventListener('click', ev => {
+        ev.stopPropagation();
+        if(confirm(`'${b.name}' 보드를 삭제할까요? 안의 사진과 설명도 함께 삭제돼요.`)){
+          deleteMbBoard(b.id);
+        }
+      });
+      tab.appendChild(x);
+    }
+
+    tab.addEventListener('click', () => {
+      if(mbEditingBoardId === b.id) return;
+      mbActiveBoardId = b.id;
+      mbSelectedKey = null;
+      renderMoodboard();
+    });
+    bar.appendChild(tab);
+  });
+
+  const addTab = document.createElement('div');
+  addTab.className = 'mb-tab mb-tab-add';
+  addTab.textContent = '+';
+  addTab.title = '보드 추가';
+  addTab.addEventListener('click', async () => {
+    const board = createMbBoard(mbBoards.length);
+    await saveMbBoard(board);
+    const sections = [0,1,2].map(i => emptyMbSection(board.id, i));
+    await Promise.all(sections.map(saveMbSection));
+    mbActiveBoardId = board.id;
+    mbSelectedKey = null;
+  });
+  bar.appendChild(addTab);
+}
+
+function mbGetSlotData(section, type, subIdx){
+  return type === 'main' ? section.main : section.subs[subIdx];
+}
+
+function mbBuildSlot(section, type, subIdx, flexStyle){
+  const key = type === 'main' ? (section.id+'-main') : (section.id+'-sub-'+subIdx);
+  const data = mbGetSlotData(section, type, subIdx);
+  const holder = document.createElement('div');
+  holder.style.cssText = flexStyle + ';min-width:0;min-height:0;';
+
+  const slot = document.createElement('div');
+  slot.className = 'mb-slot' + (mbSelectedKey === key ? ' selected' : '');
+
+  if(data.image){
+    slot.innerHTML = `<img class="mb-photo" src="${data.image}">`;
+  }else{
+    const label = type === 'main' ? '메인 사진' : '';
+    slot.innerHTML = `<div class="mb-placeholder">${label ? '<span>'+label+'</span>' : ''}<span>드래그 또는 Ctrl+V</span></div>`;
+  }
+
+  if(data.image && data.kb){
+    const tag = document.createElement('span');
+    tag.className = 'mb-kb-tag';
+    tag.textContent = data.kb + 'KB';
+    slot.appendChild(tag);
+  }
+
+  if(data.image){
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'mb-remove';
+    removeBtn.title = '사진 삭제';
+    removeBtn.textContent = '✕';
+    removeBtn.addEventListener('click', ev => {
+      ev.stopPropagation();
+      data.image = null; data.kb = null;
+      saveMbSection(section);
+    });
+    slot.appendChild(removeBtn);
+  }
+
+  slot.addEventListener('click', () => { mbSelectedKey = key; renderMbBoard(); });
+  slot.addEventListener('dragover', ev => { ev.preventDefault(); slot.classList.add('dragover'); });
+  slot.addEventListener('dragleave', () => slot.classList.remove('dragover'));
+  slot.addEventListener('drop', ev => {
+    ev.preventDefault();
+    slot.classList.remove('dragover');
+    const file = ev.dataTransfer.files && ev.dataTransfer.files[0];
+    if(file && file.type.indexOf('image') === 0){
+      compressImage(file).then(res => {
+        data.image = res.url; data.kb = res.kb;
+        mbSelectedKey = key;
+        saveMbSection(section);
+      });
+    }
+  });
+
+  holder.appendChild(slot);
+  return holder;
+}
+
+function renderMbBoard(){
+  const board = mbActiveBoard();
+  const row = $('#mbBoardRow');
+  row.innerHTML = '';
+  if(!board){ $('#mbSecCount').textContent = ''; return; }
+
+  const sections = mbBoardSections(board.id);
+  $('#mbSecCount').textContent = sections.length + '개 섹션';
+
+  sections.forEach(section => {
+    const col = document.createElement('div');
+    col.className = 'mb-col';
+
+    const titleInput = document.createElement('input');
+    titleInput.className = 'mb-title-input';
+    titleInput.placeholder = '예: 실내 컨셉 1';
+    titleInput.value = section.title || '';
+    titleInput.addEventListener('change', ev => {
+      section.title = ev.target.value;
+      saveMbSection(section);
+    });
+    col.appendChild(titleInput);
+
+    col.appendChild(mbBuildSlot(section, 'main', null, 'flex:4 1 0'));
+
+    const subRow = document.createElement('div');
+    subRow.className = 'mb-sub-row';
+    for(let i=0;i<3;i++){
+      subRow.appendChild(mbBuildSlot(section, 'sub', i, 'flex:1 1 0'));
+    }
+    col.appendChild(subRow);
+
+    const capHolder = document.createElement('div');
+    capHolder.style.cssText = 'flex:1.3 1 0; min-height:0;';
+    const cap = document.createElement('textarea');
+    cap.className = 'mb-caption';
+    cap.placeholder = '이 섹션 설명 입력';
+    cap.value = section.caption || '';
+    cap.addEventListener('change', ev => {
+      section.caption = ev.target.value;
+      saveMbSection(section);
+    });
+    capHolder.appendChild(cap);
+    col.appendChild(capHolder);
+
+    row.appendChild(col);
+  });
+}
+
+function renderMoodboard(){
+  renderMbTabs();
+  renderMbBoard();
+}
+
 /* ============ 이벤트 바인딩 ============ */
 function bindTabs(){
   $$('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+}
+
+function bindMoodboard(){
+  $('#mbSecMinus').addEventListener('click', () => {
+    const board = mbActiveBoard();
+    if(!board) return;
+    const sections = mbBoardSections(board.id);
+    if(sections.length > 2){
+      deleteMbSection(sections[sections.length-1].id);
+    }
+  });
+  $('#mbSecPlus').addEventListener('click', () => {
+    const board = mbActiveBoard();
+    if(!board) return;
+    const sections = mbBoardSections(board.id);
+    if(sections.length < 4){
+      saveMbSection(emptyMbSection(board.id, sections.length));
+    }
+  });
+  $('#mbClearBtn').addEventListener('click', () => {
+    const board = mbActiveBoard();
+    if(!board) return;
+    if(confirm('이 보드의 사진과 설명을 모두 지울까요?')){
+      mbBoardSections(board.id).forEach(s => {
+        s.title=''; s.caption='';
+        s.main = {image:null,kb:null};
+        s.subs = [{image:null,kb:null},{image:null,kb:null},{image:null,kb:null}];
+        saveMbSection(s);
+      });
+    }
+  });
+  document.addEventListener('paste', ev => {
+    if(!mbSelectedKey) return;
+    const mbPanel = $('#panel-moodboard');
+    if(!mbPanel || !mbPanel.classList.contains('active')) return;
+    const items = ev.clipboardData && ev.clipboardData.items;
+    if(!items) return;
+    for(let i=0;i<items.length;i++){
+      const item = items[i];
+      if(item.type.indexOf('image') === 0){
+        const blob = item.getAsFile();
+        const dashIdx = mbSelectedKey.indexOf('-');
+        const sectionId = mbSelectedKey.slice(0, dashIdx);
+        const rest = mbSelectedKey.slice(dashIdx+1);
+        const section = mbSections.find(s => s.id === sectionId);
+        if(!section) return;
+        const type = rest.indexOf('sub') === 0 ? 'sub' : 'main';
+        const subIdx = type === 'sub' ? parseInt(rest.split('-')[1]) : null;
+        const data = mbGetSlotData(section, type, subIdx);
+        compressImage(blob).then(res => {
+          data.image = res.url; data.kb = res.kb;
+          saveMbSection(section);
+        });
+        ev.preventDefault();
+        break;
+      }
+    }
   });
 }
 
@@ -1040,6 +1461,7 @@ function showLogin(){
   unsubscribers.forEach(u => u());
   unsubscribers = [];
   steps = null; expenses = [];
+  mbBoards = []; mbSections = []; mbActiveBoardId = null; mbSelectedKey = null; mbEditingBoardId = null; mbSeeded = false;
   $('#appRoot').style.display = 'none';
   $('#loginScreen').style.display = 'flex';
   $('#loginEmail').value = '';
@@ -1052,6 +1474,7 @@ bindTabs();
 bindDateEdit();
 bindAddStep();
 bindAddExpRow();
+bindMoodboard();
 bindAuth();
 
 onAuthStateChanged(auth, (user) => {
