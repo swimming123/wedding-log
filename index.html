@@ -345,6 +345,14 @@
   .modal-radio-row input{ accent-color:var(--primary); width:15px; height:15px; }
   .modal-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
 
+  /* ---------- 정보(자유 스프레드시트) ---------- */
+  .info-corner, .info-colhead, .info-rowhead{
+    background:#FAFAFA; color:var(--text-secondary); font-size:11px; text-align:center;
+    padding:5px 8px; border:1px solid var(--border); user-select:none; white-space:nowrap;
+  }
+  .info-rowhead{ min-width:34px; }
+  table.sheet.info-sheet td{ min-width:90px; }
+
   footer{ text-align:center; font-size:11px; color:var(--text-secondary); margin-top:30px; }
 
   @media (max-width:640px){
@@ -411,6 +419,7 @@
       <button class="tab-btn active" data-tab="timeline">타임라인 · 체크리스트</button>
       <button class="tab-btn" data-tab="expenses">지출 장부</button>
       <button class="tab-btn" data-tab="moodboard">시안</button>
+      <button class="tab-btn" data-tab="infosheet">정보</button>
     </div>
 
     <div class="panel active" id="panel-timeline">
@@ -480,6 +489,24 @@
       </div>
     </div>
 
+    <div class="panel" id="panel-infosheet">
+      <div class="block" style="padding:16px;">
+        <div class="mb-toolbar">
+          <span class="hint">자유롭게 적는 표예요. 셀을 클릭해서 바로 입력하세요.</span>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <button id="infoAddRowBtn" class="btn-ghost">+ 행</button>
+            <button id="infoDelRowBtn" class="btn-ghost">－ 행</button>
+            <button id="infoAddColBtn" class="btn-ghost">+ 열</button>
+            <button id="infoDelColBtn" class="btn-ghost">－ 열</button>
+            <button id="infoClearBtn" class="btn-ghost">전체 지우기</button>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table class="sheet info-sheet" id="infoTable" style="min-width:0;"></table>
+        </div>
+      </div>
+    </div>
+
     <footer>변경 내용은 Firestore에 실시간으로 저장·동기화돼요.</footer>
   </div>
 </div>
@@ -512,6 +539,7 @@ const checklistRef = doc(db, "app", "checklist");
 const expensesRef = doc(db, "app", "expenses");
 const mbBoardsCol = collection(db, "moodboardBoards");
 const mbSectionsCol = collection(db, "moodboardSections");
+const infoRef = doc(db, "app", "infosheet");
 
 
 /* ============ 기본 데이터 ============ */
@@ -594,6 +622,7 @@ let mbSelectedKey = null;
 let mbEditingBoardId = null;
 let mbSeeded = false;
 let mbPrintScope = 'all';
+let infoRows = null;
 
 function sortStepsByDate(){
   steps.sort((a,b)=> (Number(b.monthsBefore)||0) - (Number(a.monthsBefore)||0));
@@ -727,6 +756,25 @@ async function seedFirstMbBoardIfEmpty(){
   await Promise.all(sections.map(saveMbSection));
 }
 
+/* ============ 정보(자유 스프레드시트) ============ */
+function buildDefaultInfoRows(){
+  const cols = 4, rows = 6;
+  return Array.from({length: rows}, () => Array.from({length: cols}, () => ''));
+}
+async function saveInfoRows(){
+  try{ await setDoc(infoRef, {rows: infoRows}); }
+  catch(e){ console.error('info sheet save failed', e); }
+}
+function colLetter(idx){
+  let s = ''; idx++;
+  while(idx > 0){
+    const rem = (idx - 1) % 26;
+    s = String.fromCharCode(65 + rem) + s;
+    idx = Math.floor((idx - 1) / 26);
+  }
+  return s;
+}
+
 function buildDefaultSteps(){
   return DEFAULT_STEPS.map(s => ({
     ...s,
@@ -800,6 +848,16 @@ function startListeners(){
     });
     renderMoodboard();
   }, err => console.error('moodboard sections listener error', err)));
+
+  unsubscribers.push(onSnapshot(infoRef, snap => {
+    if(snap.exists() && Array.isArray(snap.data().rows) && snap.data().rows.length){
+      infoRows = snap.data().rows;
+    }else{
+      infoRows = buildDefaultInfoRows();
+      saveInfoRows();
+    }
+    renderInfoSheet();
+  }, err => console.error('info sheet listener error', err)));
 }
 
 /* ============ 렌더: 요약 ============ */
@@ -1443,6 +1501,86 @@ function buildPrintArea(){
 }
 window.addEventListener('beforeprint', buildPrintArea);
 
+/* ============ 렌더: 정보(자유 스프레드시트) ============ */
+function renderInfoSheet(){
+  const table = $('#infoTable');
+  if(!infoRows){ table.innerHTML = ''; return; }
+  const colCount = infoRows[0] ? infoRows[0].length : 0;
+  table.innerHTML = '';
+
+  const thead = document.createElement('thead');
+  const headRow = document.createElement('tr');
+  const corner = document.createElement('th');
+  corner.className = 'info-corner';
+  headRow.appendChild(corner);
+  for(let c=0; c<colCount; c++){
+    const th = document.createElement('th');
+    th.className = 'info-colhead';
+    th.textContent = colLetter(c);
+    headRow.appendChild(th);
+  }
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  infoRows.forEach((row, r) => {
+    const tr = document.createElement('tr');
+    const rowHead = document.createElement('td');
+    rowHead.className = 'info-rowhead';
+    rowHead.textContent = r+1;
+    tr.appendChild(rowHead);
+
+    row.forEach((val, c) => {
+      const td = document.createElement('td');
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'cell-input';
+      input.value = val || '';
+      input.addEventListener('change', ev => {
+        infoRows[r][c] = ev.target.value;
+        saveInfoRows();
+      });
+      td.appendChild(input);
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+}
+
+function bindInfoSheet(){
+  $('#infoAddRowBtn').addEventListener('click', () => {
+    if(!infoRows) return;
+    const colCount = infoRows[0] ? infoRows[0].length : 0;
+    infoRows.push(Array.from({length: colCount}, () => ''));
+    saveInfoRows();
+  });
+  $('#infoDelRowBtn').addEventListener('click', () => {
+    if(!infoRows || infoRows.length <= 1) return;
+    infoRows.pop();
+    saveInfoRows();
+  });
+  $('#infoAddColBtn').addEventListener('click', () => {
+    if(!infoRows) return;
+    infoRows.forEach(row => row.push(''));
+    saveInfoRows();
+  });
+  $('#infoDelColBtn').addEventListener('click', () => {
+    if(!infoRows) return;
+    const colCount = infoRows[0] ? infoRows[0].length : 0;
+    if(colCount <= 1) return;
+    infoRows.forEach(row => row.pop());
+    saveInfoRows();
+  });
+  $('#infoClearBtn').addEventListener('click', () => {
+    if(!infoRows) return;
+    if(confirm('표의 모든 내용을 지울까요?')){
+      infoRows = infoRows.map(row => row.map(() => ''));
+      saveInfoRows();
+    }
+  });
+}
+
 /* ============ 이벤트 바인딩 ============ */
 function bindTabs(){
   $$('.tab-btn').forEach(btn => {
@@ -1609,6 +1747,7 @@ function showLogin(){
   unsubscribers = [];
   steps = null; expenses = [];
   mbBoards = []; mbSections = []; mbActiveBoardId = null; mbSelectedKey = null; mbEditingBoardId = null; mbSeeded = false;
+  infoRows = null;
   $('#appRoot').style.display = 'none';
   $('#loginScreen').style.display = 'flex';
   $('#loginEmail').value = '';
@@ -1622,6 +1761,7 @@ bindDateEdit();
 bindAddStep();
 bindAddExpRow();
 bindMoodboard();
+bindInfoSheet();
 bindAuth();
 
 onAuthStateChanged(auth, (user) => {
