@@ -6,6 +6,8 @@
 <title>Wedding Log</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.css">
+<script src="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.js"></script>
 <style>
   :root{
     --primary:#1976D2;
@@ -345,13 +347,18 @@
   .modal-radio-row input{ accent-color:var(--primary); width:15px; height:15px; }
   .modal-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
 
-  /* ---------- 정보(자유 스프레드시트) ---------- */
-  .info-corner, .info-colhead, .info-rowhead{
-    background:#FAFAFA; color:var(--text-secondary); font-size:11px; text-align:center;
-    padding:5px 8px; border:1px solid var(--border); user-select:none; white-space:nowrap;
+  /* ---------- 정보(마크다운 메모) ---------- */
+  .info-editor-wrap .EasyMDEContainer{ font-family:'Roboto', sans-serif; }
+  .info-editor-wrap .CodeMirror{
+    border:1px solid var(--border); border-radius:0 0 4px 4px; font-size:13.5px; color:var(--text);
+    min-height:420px;
   }
-  .info-rowhead{ min-width:34px; }
-  table.sheet.info-sheet td{ min-width:90px; }
+  .info-editor-wrap .editor-toolbar{ border:1px solid var(--border); border-bottom:none; border-radius:4px 4px 0 0; opacity:1; }
+  .info-editor-wrap .editor-toolbar a{ color:var(--text-secondary) !important; }
+  .info-editor-wrap .editor-toolbar a.active, .info-editor-wrap .editor-toolbar a:hover{
+    background:var(--primary-light); border-color:var(--border); color:var(--primary) !important;
+  }
+  .info-save-state{ font-size:11.5px; color:var(--text-secondary); }
 
   footer{ text-align:center; font-size:11px; color:var(--text-secondary); margin-top:30px; }
 
@@ -492,17 +499,14 @@
     <div class="panel" id="panel-infosheet">
       <div class="block" style="padding:16px;">
         <div class="mb-toolbar">
-          <span class="hint">자유롭게 적는 표예요. 셀을 클릭해서 바로 입력하세요.</span>
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <button id="infoAddRowBtn" class="btn-ghost">+ 행</button>
-            <button id="infoDelRowBtn" class="btn-ghost">－ 행</button>
-            <button id="infoAddColBtn" class="btn-ghost">+ 열</button>
-            <button id="infoDelColBtn" class="btn-ghost">－ 열</button>
-            <button id="infoClearBtn" class="btn-ghost">전체 지우기</button>
+          <span class="hint">마크다운으로 자유롭게 메모하세요. 목록·굵게·제목 등 지원돼요.</span>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <span class="info-save-state" id="infoSaveState"></span>
+            <button id="infoDateBtn" class="btn-ghost">오늘 날짜 삽입 (F5)</button>
           </div>
         </div>
-        <div class="table-scroll">
-          <table class="sheet info-sheet" id="infoTable" style="min-width:0;"></table>
+        <div class="info-editor-wrap">
+          <textarea id="infoEditor"></textarea>
         </div>
       </div>
     </div>
@@ -622,7 +626,9 @@ let mbSelectedKey = null;
 let mbEditingBoardId = null;
 let mbSeeded = false;
 let mbPrintScope = 'all';
-let infoRows = null;
+let infoContent = '';
+let infoEditor = null;
+let infoSaveTimer = null;
 
 function sortStepsByDate(){
   steps.sort((a,b)=> (Number(b.monthsBefore)||0) - (Number(a.monthsBefore)||0));
@@ -756,23 +762,97 @@ async function seedFirstMbBoardIfEmpty(){
   await Promise.all(sections.map(saveMbSection));
 }
 
-/* ============ 정보(자유 스프레드시트) ============ */
-function buildDefaultInfoRows(){
-  const cols = 4, rows = 6;
-  return Array.from({length: rows}, () => Array.from({length: cols}, () => ''));
+/* ============ 정보(마크다운 메모) ============ */
+async function saveInfoNote(){
+  try{
+    await setDoc(infoRef, {content: infoContent});
+    const el = $('#infoSaveState');
+    if(el) el.textContent = '저장됨 · ' + new Date().toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'});
+  }catch(e){ console.error('info note save failed', e); }
 }
-async function saveInfoRows(){
-  try{ await setDoc(infoRef, {rows: infoRows}); }
-  catch(e){ console.error('info sheet save failed', e); }
+function scheduleInfoSave(){
+  if(!infoEditor) return;
+  infoContent = infoEditor.value();
+  const el = $('#infoSaveState');
+  if(el) el.textContent = '저장 중...';
+  clearTimeout(infoSaveTimer);
+  infoSaveTimer = setTimeout(saveInfoNote, 700);
 }
-function colLetter(idx){
-  let s = ''; idx++;
-  while(idx > 0){
-    const rem = (idx - 1) % 26;
-    s = String.fromCharCode(65 + rem) + s;
-    idx = Math.floor((idx - 1) / 26);
+function formatNowForNote(){
+  const d = new Date();
+  const days = ['일','월','화','수','목','금','토'];
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}(${days[d.getDay()]}) ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function insertDateAtCursor(){
+  const text = formatNowForNote();
+  if(infoEditor){
+    const cm = infoEditor.codemirror;
+    cm.replaceSelection(text);
+    cm.focus();
+    scheduleInfoSave();
+  }else{
+    const ta = document.getElementById('infoEditor');
+    const start = ta.selectionStart, end = ta.selectionEnd;
+    ta.value = ta.value.slice(0,start) + text + ta.value.slice(end);
+    ta.selectionStart = ta.selectionEnd = start + text.length;
+    ta.focus();
+    infoContent = ta.value;
+    clearTimeout(infoSaveTimer);
+    infoSaveTimer = setTimeout(saveInfoNote, 300);
   }
-  return s;
+}
+function initInfoEditor(){
+  const textareaEl = document.getElementById('infoEditor');
+  try{
+    if(typeof EasyMDE === 'undefined') throw new Error('EasyMDE not loaded');
+    infoEditor = new EasyMDE({
+      element: textareaEl,
+      spellChecker: false,
+      autofocus: false,
+      status: false,
+      placeholder: '자유롭게 메모하세요. "- "로 시작하면 목록, "# "로 시작하면 제목이 돼요.',
+      toolbar: ['bold','italic','heading','|','quote','unordered-list','ordered-list','|','link','|','preview','guide']
+    });
+    infoEditor.codemirror.on('change', scheduleInfoSave);
+    infoEditor.codemirror.on('blur', () => {
+      clearTimeout(infoSaveTimer);
+      if(infoEditor){ infoContent = infoEditor.value(); saveInfoNote(); }
+    });
+    infoEditor.codemirror.on('keydown', (cm, ev) => {
+      if(ev.key === 'F5'){
+        ev.preventDefault();
+        insertDateAtCursor();
+      }
+    });
+  }catch(err){
+    console.error('EasyMDE load failed, falling back to plain textarea', err);
+    infoEditor = null;
+    // 마크다운 에디터 로드에 실패해도 기본 메모장처럼은 동작하도록 대체 처리
+    textareaEl.style.cssText = 'width:100%; min-height:420px; box-sizing:border-box; border:1px solid var(--border); border-radius:4px; padding:12px; font:inherit; font-size:13.5px; resize:vertical;';
+    textareaEl.value = infoContent || '';
+    textareaEl.addEventListener('input', () => {
+      infoContent = textareaEl.value;
+      const el = $('#infoSaveState');
+      if(el) el.textContent = '저장 중...';
+      clearTimeout(infoSaveTimer);
+      infoSaveTimer = setTimeout(saveInfoNote, 700);
+    });
+    textareaEl.addEventListener('blur', () => {
+      clearTimeout(infoSaveTimer);
+      infoContent = textareaEl.value;
+      saveInfoNote();
+    });
+    textareaEl.addEventListener('keydown', ev => {
+      if(ev.key === 'F5'){
+        ev.preventDefault();
+        insertDateAtCursor();
+      }
+    });
+  }
+}
+function bindInfoSheet(){
+  $('#infoDateBtn').addEventListener('click', () => insertDateAtCursor());
 }
 
 function buildDefaultSteps(){
@@ -850,14 +930,19 @@ function startListeners(){
   }, err => console.error('moodboard sections listener error', err)));
 
   unsubscribers.push(onSnapshot(infoRef, snap => {
-    if(snap.exists() && Array.isArray(snap.data().rows) && snap.data().rows.length){
-      infoRows = snap.data().rows;
-    }else{
-      infoRows = buildDefaultInfoRows();
-      saveInfoRows();
+    const remote = (snap.exists() && typeof snap.data().content === 'string') ? snap.data().content : '';
+    infoContent = remote;
+    if(infoEditor && !infoEditor.codemirror.hasFocus() && infoEditor.value() !== remote){
+      infoEditor.value(remote);
+    }else if(!infoEditor){
+      const ta = document.getElementById('infoEditor');
+      if(ta && document.activeElement !== ta && ta.value !== remote){
+        ta.value = remote;
+      }
     }
-    renderInfoSheet();
-  }, err => console.error('info sheet listener error', err)));
+    const el = $('#infoSaveState');
+    if(el) el.textContent = remote ? '동기화됨' : '';
+  }, err => console.error('info note listener error', err)));
 }
 
 /* ============ 렌더: 요약 ============ */
@@ -1249,6 +1334,9 @@ function switchTab(tab){
   $$('.panel').forEach(p=>p.classList.remove('active'));
   $(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
   $('#panel-' + tab).classList.add('active');
+  if(tab === 'infosheet' && infoEditor){
+    setTimeout(() => infoEditor.codemirror.refresh(), 0);
+  }
 }
 
 /* ============ 렌더: 시안(무드보드) ============ */
@@ -1501,86 +1589,6 @@ function buildPrintArea(){
 }
 window.addEventListener('beforeprint', buildPrintArea);
 
-/* ============ 렌더: 정보(자유 스프레드시트) ============ */
-function renderInfoSheet(){
-  const table = $('#infoTable');
-  if(!infoRows){ table.innerHTML = ''; return; }
-  const colCount = infoRows[0] ? infoRows[0].length : 0;
-  table.innerHTML = '';
-
-  const thead = document.createElement('thead');
-  const headRow = document.createElement('tr');
-  const corner = document.createElement('th');
-  corner.className = 'info-corner';
-  headRow.appendChild(corner);
-  for(let c=0; c<colCount; c++){
-    const th = document.createElement('th');
-    th.className = 'info-colhead';
-    th.textContent = colLetter(c);
-    headRow.appendChild(th);
-  }
-  thead.appendChild(headRow);
-  table.appendChild(thead);
-
-  const tbody = document.createElement('tbody');
-  infoRows.forEach((row, r) => {
-    const tr = document.createElement('tr');
-    const rowHead = document.createElement('td');
-    rowHead.className = 'info-rowhead';
-    rowHead.textContent = r+1;
-    tr.appendChild(rowHead);
-
-    row.forEach((val, c) => {
-      const td = document.createElement('td');
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.className = 'cell-input';
-      input.value = val || '';
-      input.addEventListener('change', ev => {
-        infoRows[r][c] = ev.target.value;
-        saveInfoRows();
-      });
-      td.appendChild(input);
-      tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
-  });
-  table.appendChild(tbody);
-}
-
-function bindInfoSheet(){
-  $('#infoAddRowBtn').addEventListener('click', () => {
-    if(!infoRows) return;
-    const colCount = infoRows[0] ? infoRows[0].length : 0;
-    infoRows.push(Array.from({length: colCount}, () => ''));
-    saveInfoRows();
-  });
-  $('#infoDelRowBtn').addEventListener('click', () => {
-    if(!infoRows || infoRows.length <= 1) return;
-    infoRows.pop();
-    saveInfoRows();
-  });
-  $('#infoAddColBtn').addEventListener('click', () => {
-    if(!infoRows) return;
-    infoRows.forEach(row => row.push(''));
-    saveInfoRows();
-  });
-  $('#infoDelColBtn').addEventListener('click', () => {
-    if(!infoRows) return;
-    const colCount = infoRows[0] ? infoRows[0].length : 0;
-    if(colCount <= 1) return;
-    infoRows.forEach(row => row.pop());
-    saveInfoRows();
-  });
-  $('#infoClearBtn').addEventListener('click', () => {
-    if(!infoRows) return;
-    if(confirm('표의 모든 내용을 지울까요?')){
-      infoRows = infoRows.map(row => row.map(() => ''));
-      saveInfoRows();
-    }
-  });
-}
-
 /* ============ 이벤트 바인딩 ============ */
 function bindTabs(){
   $$('.tab-btn').forEach(btn => {
@@ -1747,7 +1755,9 @@ function showLogin(){
   unsubscribers = [];
   steps = null; expenses = [];
   mbBoards = []; mbSections = []; mbActiveBoardId = null; mbSelectedKey = null; mbEditingBoardId = null; mbSeeded = false;
-  infoRows = null;
+  infoContent = '';
+  if(infoEditor){ infoEditor.value(''); }
+  else{ const ta = document.getElementById('infoEditor'); if(ta) ta.value=''; }
   $('#appRoot').style.display = 'none';
   $('#loginScreen').style.display = 'flex';
   $('#loginEmail').value = '';
@@ -1762,6 +1772,7 @@ bindAddStep();
 bindAddExpRow();
 bindMoodboard();
 bindInfoSheet();
+initInfoEditor();
 bindAuth();
 
 onAuthStateChanged(auth, (user) => {
