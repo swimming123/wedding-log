@@ -275,6 +275,12 @@
     font-weight:500; padding:3px 4px; color:var(--text); flex:0 0 22px; border-radius:3px;
   }
   .mb-title-input:focus{ outline:2px solid var(--primary); outline-offset:-2px; background:#fff; }
+  .mb-layout-toggle{ display:flex; gap:2px; flex:0 0 20px; }
+  .mb-layout-btn{
+    flex:1; font-size:9.5px; padding:2px 3px; border:1px solid var(--border); background:#fff;
+    color:var(--text-secondary); cursor:pointer; border-radius:3px;
+  }
+  .mb-layout-btn.active{ background:var(--primary); color:#fff; border-color:var(--primary); }
   .mb-sub-row{ flex:2 1 0; min-height:0; display:flex; flex-direction:row; gap:4px; }
   .mb-slot{
     position:relative; width:100%; height:100%; border:1px solid var(--border); border-radius:4px;
@@ -458,7 +464,7 @@
       <div class="mb-tabbar" id="mbTabBar"></div>
       <div class="mb-panel block">
         <div class="mb-toolbar">
-          <span class="hint">사진 칸을 클릭해 선택한 뒤 드래그하거나 Ctrl+V로 붙여넣으세요 · 보드 이름은 더블클릭해서 수정</span>
+          <span class="hint">사진 칸을 클릭해 선택한 뒤 드래그하거나 Ctrl+V로 붙여넣으세요 · 보드 이름은 더블클릭해서 수정 · 섹션마다 "메인+서브"/"빅포토×2" 레이아웃 선택 가능</span>
           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <div class="mb-sec-ctrl">
               <button id="mbSecMinus" class="btn-ghost">－</button>
@@ -723,8 +729,9 @@ async function saveExpenses(){
 /* ============ 시안(무드보드) Firestore 저장/삭제 ============ */
 function emptyMbSection(boardId, order){
   return {
-    id: uid(), boardId, order, title:'', caption:'',
+    id: uid(), boardId, order, title:'', caption:'', layout:'main-subs',
     main:{image:null, kb:null},
+    secondMain:{image:null, kb:null},
     subs:[{image:null,kb:null},{image:null,kb:null},{image:null,kb:null}]
   };
 }
@@ -925,6 +932,8 @@ function startListeners(){
     mbSections.forEach(s => {
       if(!s.main) s.main = {image:null, kb:null};
       if(!s.subs) s.subs = [{image:null,kb:null},{image:null,kb:null},{image:null,kb:null}];
+      if(!s.secondMain) s.secondMain = {image:null, kb:null};
+      if(!s.layout) s.layout = 'main-subs';
     });
     renderMoodboard();
   }, err => console.error('moodboard sections listener error', err)));
@@ -1417,11 +1426,13 @@ function renderMbTabs(){
 }
 
 function mbGetSlotData(section, type, subIdx){
-  return type === 'main' ? section.main : section.subs[subIdx];
+  if(type === 'main') return section.main;
+  if(type === 'second') return section.secondMain;
+  return section.subs[subIdx];
 }
 
 function mbBuildSlot(section, type, subIdx, flexStyle){
-  const key = type === 'main' ? (section.id+'-main') : (section.id+'-sub-'+subIdx);
+  const key = type === 'sub' ? (section.id+'-sub-'+subIdx) : (section.id+'-'+type);
   const data = mbGetSlotData(section, type, subIdx);
   const holder = document.createElement('div');
   holder.style.cssText = flexStyle + ';min-width:0;min-height:0;';
@@ -1489,6 +1500,24 @@ function renderMbBoard(){
     const col = document.createElement('div');
     col.className = 'mb-col';
 
+    const toggleRow = document.createElement('div');
+    toggleRow.className = 'mb-layout-toggle';
+    const btnMain = document.createElement('button');
+    btnMain.className = 'mb-layout-btn' + (section.layout !== 'big-x2' ? ' active' : '');
+    btnMain.textContent = '메인+서브';
+    btnMain.addEventListener('click', () => {
+      if(section.layout === 'big-x2'){ section.layout = 'main-subs'; saveMbSection(section); }
+    });
+    const btnBig = document.createElement('button');
+    btnBig.className = 'mb-layout-btn' + (section.layout === 'big-x2' ? ' active' : '');
+    btnBig.textContent = '빅포토×2';
+    btnBig.addEventListener('click', () => {
+      if(section.layout !== 'big-x2'){ section.layout = 'big-x2'; saveMbSection(section); }
+    });
+    toggleRow.appendChild(btnMain);
+    toggleRow.appendChild(btnBig);
+    col.appendChild(toggleRow);
+
     const titleInput = document.createElement('input');
     titleInput.className = 'mb-title-input';
     titleInput.placeholder = '예: 실내 컨셉 1';
@@ -1499,27 +1528,32 @@ function renderMbBoard(){
     });
     col.appendChild(titleInput);
 
-    col.appendChild(mbBuildSlot(section, 'main', null, 'flex:4 1 0'));
+    if(section.layout === 'big-x2'){
+      col.appendChild(mbBuildSlot(section, 'main', null, 'flex:1 1 0'));
+      col.appendChild(mbBuildSlot(section, 'second', null, 'flex:1 1 0'));
+    }else{
+      col.appendChild(mbBuildSlot(section, 'main', null, 'flex:4 1 0'));
 
-    const subRow = document.createElement('div');
-    subRow.className = 'mb-sub-row';
-    for(let i=0;i<3;i++){
-      subRow.appendChild(mbBuildSlot(section, 'sub', i, 'flex:1 1 0'));
+      const subRow = document.createElement('div');
+      subRow.className = 'mb-sub-row';
+      for(let i=0;i<3;i++){
+        subRow.appendChild(mbBuildSlot(section, 'sub', i, 'flex:1 1 0'));
+      }
+      col.appendChild(subRow);
+
+      const capHolder = document.createElement('div');
+      capHolder.style.cssText = 'flex:1.3 1 0; min-height:0;';
+      const cap = document.createElement('textarea');
+      cap.className = 'mb-caption';
+      cap.placeholder = '이 섹션 설명 입력';
+      cap.value = section.caption || '';
+      cap.addEventListener('change', ev => {
+        section.caption = ev.target.value;
+        saveMbSection(section);
+      });
+      capHolder.appendChild(cap);
+      col.appendChild(capHolder);
     }
-    col.appendChild(subRow);
-
-    const capHolder = document.createElement('div');
-    capHolder.style.cssText = 'flex:1.3 1 0; min-height:0;';
-    const cap = document.createElement('textarea');
-    cap.className = 'mb-caption';
-    cap.placeholder = '이 섹션 설명 입력';
-    cap.value = section.caption || '';
-    cap.addEventListener('change', ev => {
-      section.caption = ev.target.value;
-      saveMbSection(section);
-    });
-    capHolder.appendChild(cap);
-    col.appendChild(capHolder);
 
     row.appendChild(col);
   });
@@ -1553,33 +1587,47 @@ function buildPrintArea(){
       title.textContent = section.title || '';
       col.appendChild(title);
 
-      const mainBox = document.createElement('div');
-      mainBox.className = 'print-main-photo';
-      if(section.main.image){
-        const img = document.createElement('img');
-        img.src = section.main.image;
-        mainBox.appendChild(img);
-      }
-      col.appendChild(mainBox);
-
-      const subRow = document.createElement('div');
-      subRow.className = 'print-sub-row';
-      section.subs.forEach(sub => {
-        const box = document.createElement('div');
-        box.className = 'print-sub-photo';
-        if(sub.image){
+      if(section.layout === 'big-x2'){
+        [section.main, section.secondMain].forEach(slot => {
+          const box = document.createElement('div');
+          box.className = 'print-main-photo';
+          box.style.flex = '1 1 0';
+          if(slot.image){
+            const img = document.createElement('img');
+            img.src = slot.image;
+            box.appendChild(img);
+          }
+          col.appendChild(box);
+        });
+      }else{
+        const mainBox = document.createElement('div');
+        mainBox.className = 'print-main-photo';
+        if(section.main.image){
           const img = document.createElement('img');
-          img.src = sub.image;
-          box.appendChild(img);
+          img.src = section.main.image;
+          mainBox.appendChild(img);
         }
-        subRow.appendChild(box);
-      });
-      col.appendChild(subRow);
+        col.appendChild(mainBox);
 
-      const cap = document.createElement('div');
-      cap.className = 'print-caption';
-      cap.textContent = section.caption || '';
-      col.appendChild(cap);
+        const subRow = document.createElement('div');
+        subRow.className = 'print-sub-row';
+        section.subs.forEach(sub => {
+          const box = document.createElement('div');
+          box.className = 'print-sub-photo';
+          if(sub.image){
+            const img = document.createElement('img');
+            img.src = sub.image;
+            box.appendChild(img);
+          }
+          subRow.appendChild(box);
+        });
+        col.appendChild(subRow);
+
+        const cap = document.createElement('div');
+        cap.className = 'print-caption';
+        cap.textContent = section.caption || '';
+        col.appendChild(cap);
+      }
 
       page.appendChild(col);
     });
@@ -1641,6 +1689,7 @@ function bindMoodboard(){
       mbBoardSections(board.id).forEach(s => {
         s.title=''; s.caption='';
         s.main = {image:null,kb:null};
+        s.secondMain = {image:null,kb:null};
         s.subs = [{image:null,kb:null},{image:null,kb:null},{image:null,kb:null}];
         saveMbSection(s);
       });
@@ -1661,7 +1710,7 @@ function bindMoodboard(){
         const rest = mbSelectedKey.slice(dashIdx+1);
         const section = mbSections.find(s => s.id === sectionId);
         if(!section) return;
-        const type = rest.indexOf('sub') === 0 ? 'sub' : 'main';
+        const type = rest.indexOf('sub') === 0 ? 'sub' : (rest === 'second' ? 'second' : 'main');
         const subIdx = type === 'sub' ? parseInt(rest.split('-')[1]) : null;
         const data = mbGetSlotData(section, type, subIdx);
         compressImage(blob).then(res => {
