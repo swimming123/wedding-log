@@ -1,58 +1,228 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>모바일 청첩장</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --paper:#FBF8F3; --ink:#2A2620; --ink-soft:#7A7266; --line:#E7DFD2; --accent:#9C8563;
-  }
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
-  body{
-    background:var(--paper); color:var(--ink);
-    font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
-    -webkit-font-smoothing:antialiased;
-  }
-  .card{ max-width:460px; margin:0 auto; min-height:100vh; background:#fff; box-shadow:0 0 40px rgba(0,0,0,0.06); position:relative; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>모바일 청첩장</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;700&family=Noto+Sans+KR:wght@300;400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --paper: #FBF8F3;
+      --ink: #2A2620;
+      --ink-soft: #7A7266;
+      --line: #E7DFD2;
+      --accent: #9C8563;
+    }
 
-  .carousel{ position:relative; width:100%; aspect-ratio:4/5; background:#EFEAE0; overflow:hidden; }
-  .carousel-track{
-    display:flex; width:100%; height:100%; overflow-x:auto; scroll-snap-type:x mandatory;
-    -webkit-overflow-scrolling:touch; scrollbar-width:none;
-  }
-  .carousel-track::-webkit-scrollbar{ display:none; }
-  .carousel-slide{ flex:0 0 100%; scroll-snap-align:center; height:100%; }
-  .carousel-slide img{ width:100%; height:100%; object-fit:cover; display:block; }
-  .carousel-dots{ position:absolute; bottom:14px; left:0; right:0; display:flex; justify-content:center; gap:6px; }
-  .carousel-dot{ width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.55); }
-  .carousel-dot.active{ background:#fff; }
-  .carousel-empty{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--ink-soft); font-size:13px; }
+    * {
+      box-sizing: border-box;
+    }
 
-  .content{ padding:38px 30px 50px; text-align:center; }
-  .eyebrow{ font-size:11.5px; letter-spacing:0.18em; color:var(--accent); margin:0 0 14px; }
-  .names{ font-family:'Noto Serif KR', serif; font-size:26px; font-weight:500; margin:0; line-height:1.5; }
-  .names .amp{ color:var(--accent); font-weight:400; margin:0 8px; font-size:20px; }
-  .phrase{
-    margin:26px 0; font-size:14px; line-height:1.9; color:var(--ink-soft); white-space:pre-wrap;
-    padding:0 4px;
-  }
-  .divider{ width:32px; height:1px; background:var(--line); margin:26px auto; }
-  .datetime{ font-family:'Noto Serif KR', serif; font-size:19px; margin:0 0 6px; }
-  .datetime-sub{ font-size:12.5px; color:var(--ink-soft); margin:0 0 22px; }
-  .venue-name{ font-size:15px; font-weight:500; margin:0 0 4px; }
-  .venue-address{ font-size:12.5px; color:var(--ink-soft); margin:0; }
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+    }
 
-  .loading{ text-align:center; padding:60px 20px; color:var(--ink-soft); font-size:13px; }
-</style>
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .card {
+      max-width: 460px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: #fff;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.06);
+      position: relative;
+    }
+
+    .carousel {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4/5;
+      background: #EFEAE0;
+      overflow: hidden;
+    }
+
+    .carousel-track {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .carousel-track::-webkit-scrollbar {
+      display: none;
+    }
+
+    .carousel-slide {
+      flex: 0 0 100%;
+      scroll-snap-align: center;
+      height: 100%;
+    }
+
+    .carousel-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .carousel-dots {
+      position: absolute;
+      bottom: 14px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .carousel-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.85);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 15px;
+      color: var(--ink);
+      z-index: 2;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    .carousel-arrow.prev {
+      left: 10px;
+    }
+
+    .carousel-arrow.next {
+      right: 10px;
+    }
+
+    .carousel-arrow:hover {
+      background: #fff;
+    }
+
+    .carousel-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.55);
+    }
+
+    .carousel-dot.active {
+      background: #fff;
+    }
+
+    .carousel-empty {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-soft);
+      font-size: 13px;
+    }
+
+    .content {
+      padding: 38px 30px 50px;
+      text-align: center;
+    }
+
+    .eyebrow {
+      font-size: 11.5px;
+      letter-spacing: 0.18em;
+      color: var(--accent);
+      margin: 0 0 14px;
+    }
+
+    .names {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 26px;
+      font-weight: 500;
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .names .amp {
+      color: var(--accent);
+      font-weight: 400;
+      margin: 0 8px;
+      font-size: 20px;
+    }
+
+    .phrase {
+      margin: 26px 0;
+      font-size: 14px;
+      line-height: 1.9;
+      color: var(--ink-soft);
+      white-space: pre-wrap;
+      padding: 0 4px;
+    }
+
+    .divider {
+      width: 32px;
+      height: 1px;
+      background: var(--line);
+      margin: 26px auto;
+    }
+
+    .datetime {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 19px;
+      margin: 0 0 6px;
+    }
+
+    .datetime-sub {
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      margin: 0 0 22px;
+    }
+
+    .venue-name {
+      font-size: 15px;
+      font-weight: 500;
+      margin: 0 0 4px;
+    }
+
+    .venue-address {
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      margin: 0;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--ink-soft);
+      font-size: 13px;
+    }
+  </style>
 </head>
+
 <body>
   <div class="card" id="card" style="display:none;">
     <div class="carousel" id="carousel">
       <div class="carousel-track" id="carouselTrack"></div>
+      <button class="carousel-arrow prev" id="carouselPrev" style="display:none;" aria-label="이전 사진">‹</button>
+      <button class="carousel-arrow next" id="carouselNext" style="display:none;" aria-label="다음 사진">›</button>
       <div class="carousel-dots" id="carouselDots"></div>
     </div>
     <div class="content">
@@ -68,106 +238,152 @@
   </div>
   <div class="loading" id="loadingState">청첩장을 불러오는 중...</div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-import { getFirestore, doc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+    import { getFirestore, doc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCv4C_YQfPmq3vWAzfH9hicceBKn7uGDcQ",
-  authDomain: "wedding-log-ab8be.firebaseapp.com",
-  projectId: "wedding-log-ab8be",
-  storageBucket: "wedding-log-ab8be.firebasestorage.app",
-  messagingSenderId: "1051939244748",
-  appId: "1:1051939244748:web:42e1b03187ce036f8c9069",
-  measurementId: "G-MMCL30SMFV"
-};
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const invitationRef = doc(db, "app", "invitation");
-const photosCol = collection(db, "invitationPhotos");
+    const firebaseConfig = {
+      apiKey: "AIzaSyCv4C_YQfPmq3vWAzfH9hicceBKn7uGDcQ",
+      authDomain: "wedding-log-ab8be.firebaseapp.com",
+      projectId: "wedding-log-ab8be",
+      storageBucket: "wedding-log-ab8be.firebasestorage.app",
+      messagingSenderId: "1051939244748",
+      appId: "1:1051939244748:web:42e1b03187ce036f8c9069",
+      measurementId: "G-MMCL30SMFV"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const invitationRef = doc(db, "app", "invitation");
+    const photosCol = collection(db, "invitationPhotos");
 
-const $ = s => document.querySelector(s);
-let invitation = {};
-let photos = [];
-let shownOnce = false;
+    const $ = s => document.querySelector(s);
+    let invitation = {};
+    let photos = [];
+    let shownOnce = false;
 
-function fmtDateTime(dtStr){
-  if(!dtStr) return {main:'-', sub:''};
-  const d = new Date(dtStr);
-  if(isNaN(d)) return {main:'-', sub:''};
-  const days = ['일','월','화','수','목','금','토'];
-  const y = d.getFullYear(), m = d.getMonth()+1, day = d.getDate();
-  let h = d.getHours();
-  const min = String(d.getMinutes()).padStart(2,'0');
-  const ampm = h < 12 ? '오전' : '오후';
-  const h12 = (h % 12) === 0 ? 12 : (h % 12);
-  return {
-    main: `${y}년 ${m}월 ${day}일 ${days[d.getDay()]}요일`,
-    sub: `${ampm} ${h12}시${min !== '00' ? ' ' + min + '분' : ''}`
-  };
-}
+    function fmtDateTime(dtStr) {
+      if (!dtStr) return { main: '-', sub: '' };
+      const d = new Date(dtStr);
+      if (isNaN(d)) return { main: '-', sub: '' };
+      const days = ['일', '월', '화', '수', '목', '금', '토'];
+      const y = d.getFullYear(), m = d.getMonth() + 1, day = d.getDate();
+      let h = d.getHours();
+      const min = String(d.getMinutes()).padStart(2, '0');
+      const ampm = h < 12 ? '오전' : '오후';
+      const h12 = (h % 12) === 0 ? 12 : (h % 12);
+      return {
+        main: `${y}년 ${m}월 ${day}일 ${days[d.getDay()]}요일`,
+        sub: `${ampm} ${h12}시${min !== '00' ? ' ' + min + '분' : ''}`
+      };
+    }
 
-function renderInvitation(){
-  const groom = invitation.groomName || '신랑';
-  const bride = invitation.brideName || '신부';
-  $('#namesLine').innerHTML = `${groom}<span class="amp">·</span>${bride}`;
-  $('#phraseText').textContent = invitation.phrase || '';
-  const dt = fmtDateTime(invitation.weddingDateTime);
-  $('#datetimeMain').textContent = dt.main;
-  $('#datetimeSub').textContent = dt.sub;
-  $('#venueName').textContent = invitation.venueName || '';
-  $('#venueAddress').textContent = invitation.venueAddress || '';
+    function scrollToSlide(idx) {
+      const track = $('#carouselTrack');
+      track.scrollTo({ left: idx * track.clientWidth, behavior: 'smooth' });
+    }
 
-  const track = $('#carouselTrack');
-  const dots = $('#carouselDots');
-  track.innerHTML = '';
-  dots.innerHTML = '';
-  if(photos.length === 0){
-    track.innerHTML = '<div class="carousel-empty">사진 준비 중</div>';
-  }else{
-    photos.forEach((p, i) => {
-      const slide = document.createElement('div');
-      slide.className = 'carousel-slide';
-      const img = document.createElement('img');
-      img.src = p.image;
-      slide.appendChild(img);
-      track.appendChild(slide);
-      if(photos.length > 1){
-        const dot = document.createElement('span');
-        dot.className = 'carousel-dot' + (i===0 ? ' active' : '');
-        dots.appendChild(dot);
+    function renderInvitation() {
+      const groom = invitation.groomName || '신랑';
+      const bride = invitation.brideName || '신부';
+      $('#namesLine').innerHTML = `${groom}<span class="amp">·</span>${bride}`;
+      $('#phraseText').textContent = invitation.phrase || '';
+      const dt = fmtDateTime(invitation.weddingDateTime);
+      $('#datetimeMain').textContent = dt.main;
+      $('#datetimeSub').textContent = dt.sub;
+      $('#venueName').textContent = invitation.venueName || '';
+      $('#venueAddress').textContent = invitation.venueAddress || '';
+
+      const track = $('#carouselTrack');
+      const dots = $('#carouselDots');
+      track.innerHTML = '';
+      dots.innerHTML = '';
+      if (photos.length === 0) {
+        track.innerHTML = '<div class="carousel-empty">사진 준비 중</div>';
+      } else {
+        photos.forEach((p, i) => {
+          const slide = document.createElement('div');
+          slide.className = 'carousel-slide';
+          const img = document.createElement('img');
+          img.src = p.image;
+          slide.appendChild(img);
+          track.appendChild(slide);
+          if (photos.length > 1) {
+            const dot = document.createElement('span');
+            dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+            dot.addEventListener('click', () => scrollToSlide(i));
+            dot.style.cursor = 'pointer';
+            dots.appendChild(dot);
+          }
+        });
       }
+
+      const showArrows = photos.length > 1;
+      $('#carouselPrev').style.display = showArrows ? 'flex' : 'none';
+      $('#carouselNext').style.display = showArrows ? 'flex' : 'none';
+
+      if (!shownOnce) {
+        shownOnce = true;
+        $('#loadingState').style.display = 'none';
+        $('#card').style.display = 'block';
+      }
+    }
+
+    const trackEl = $('#carouselTrack');
+
+    // 점(dot) 동기화: 스크롤 위치에 맞춰 현재 사진 표시
+    trackEl.addEventListener('scroll', () => {
+      const dotsEls = $('#carouselDots').children;
+      if (!dotsEls.length) return;
+      const idx = Math.round(trackEl.scrollLeft / trackEl.clientWidth);
+      Array.from(dotsEls).forEach((d, i) => d.classList.toggle('active', i === idx));
     });
-  }
 
-  if(!shownOnce){
-    shownOnce = true;
-    $('#loadingState').style.display = 'none';
-    $('#card').style.display = 'block';
-  }
-}
+    // 좌우 화살표 버튼 (마우스로 넘길 때 사용)
+    $('#carouselPrev').addEventListener('click', () => {
+      const idx = Math.round(trackEl.scrollLeft / trackEl.clientWidth);
+      scrollToSlide(Math.max(0, idx - 1));
+    });
+    $('#carouselNext').addEventListener('click', () => {
+      const idx = Math.round(trackEl.scrollLeft / trackEl.clientWidth);
+      const maxIdx = trackEl.children.length - 1;
+      scrollToSlide(Math.min(maxIdx, idx + 1));
+    });
 
-if(photos.length > 1){
-  // dot sync handled below via scroll listener after render
-}
-document.addEventListener('DOMContentLoaded', () => {
-  const track = $('#carouselTrack');
-  track.addEventListener('scroll', () => {
-    const dotsEls = $('#carouselDots').children;
-    if(!dotsEls.length) return;
-    const idx = Math.round(track.scrollLeft / track.clientWidth);
-    Array.from(dotsEls).forEach((d,i) => d.classList.toggle('active', i===idx));
-  });
-});
+    // 마우스로 클릭한 채 드래그해도 슬라이드가 넘어가도록 처리 (터치는 브라우저가 기본 지원)
+    let isDragging = false, dragStartX = 0, dragStartScroll = 0, dragMoved = false;
+    trackEl.addEventListener('pointerdown', ev => {
+      if (ev.pointerType === 'touch') return; // 터치는 네이티브 스와이프 사용
+      isDragging = true; dragMoved = false;
+      dragStartX = ev.clientX;
+      dragStartScroll = trackEl.scrollLeft;
+      trackEl.setPointerCapture(ev.pointerId);
+      trackEl.style.scrollSnapType = 'none';
+    });
+    trackEl.addEventListener('pointermove', ev => {
+      if (!isDragging) return;
+      const delta = ev.clientX - dragStartX;
+      if (Math.abs(delta) > 4) dragMoved = true;
+      trackEl.scrollLeft = dragStartScroll - delta;
+    });
+    function endDrag() {
+      if (!isDragging) return;
+      isDragging = false;
+      trackEl.style.scrollSnapType = 'x mandatory';
+      const idx = Math.round(trackEl.scrollLeft / trackEl.clientWidth);
+      scrollToSlide(Math.max(0, Math.min(trackEl.children.length - 1, idx)));
+    }
+    trackEl.addEventListener('pointerup', endDrag);
+    trackEl.addEventListener('pointerleave', endDrag);
 
-onSnapshot(invitationRef, snap => {
-  invitation = snap.exists() ? snap.data() : {};
-  renderInvitation();
-});
-onSnapshot(photosCol, snap => {
-  photos = snap.docs.map(d => d.data()).sort((a,b)=> (a.order||0)-(b.order||0));
-  renderInvitation();
-});
-</script>
+    onSnapshot(invitationRef, snap => {
+      invitation = snap.exists() ? snap.data() : {};
+      renderInvitation();
+    });
+    onSnapshot(photosCol, snap => {
+      photos = snap.docs.map(d => d.data()).sort((a, b) => (a.order || 0) - (b.order || 0));
+      renderInvitation();
+    });
+  </script>
 </body>
+
 </html>
