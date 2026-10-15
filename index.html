@@ -298,6 +298,26 @@
     font-size:10px; cursor:pointer; color:var(--text-secondary); padding:0;
   }
 
+  .invite-actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .invite-badge{ font-size:12px; padding:3px 8px; border-radius:10px; background:var(--header-fill); color:var(--text-secondary); margin-right:auto; }
+  .invite-badge.on{ background:var(--primary-light); color:var(--primary); font-weight:500; }
+  .invite-section-title{ font-size:13px; font-weight:500; margin-bottom:10px; }
+  .invite-section-title .hint, .field label .hint{ font-weight:400; }
+  .invite-blocks{ display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+  .invite-block{ border:1px solid var(--border); border-radius:6px; padding:8px 10px; background:#fff; }
+  .invite-block-head{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-secondary); }
+  .invite-block-head .spacer{ flex:1; }
+  .invite-block-head button{
+    width:22px; height:22px; border:1px solid var(--border); background:#fff; border-radius:3px;
+    cursor:pointer; font-size:11px; color:var(--text-secondary); padding:0;
+  }
+  .invite-block-head button:disabled{ opacity:.35; cursor:default; }
+  .invite-block-head button.del:hover{ background:var(--error-bg); color:var(--error); }
+  .invite-block textarea, .invite-block input[type=text]{ width:100%; margin-top:6px; box-sizing:border-box; font:inherit; font-size:13px; padding:6px 8px; border:1px solid var(--border); border-radius:4px; }
+  .invite-block .note{ font-size:12px; color:var(--text-secondary); margin-top:4px; }
+  .invite-add-row{ display:flex; gap:8px; }
+  .invite-add-row select{ flex:1; padding:6px 8px; border:1px solid var(--border); border-radius:4px; font:inherit; font-size:13px; }
+
   /* ---------- 하객 관리 ---------- */
   .guest-summary{ flex-wrap:wrap; }
   .guest-summary .summary-cell{ flex:1 1 110px; min-width:110px; border-bottom:1px solid var(--border); }
@@ -564,43 +584,62 @@
     </div>
 
     <div class="panel" id="panel-invitation">
-      <div class="block" style="padding:16px; margin-bottom:16px;">
+      <div class="block" style="padding:12px 16px 0; margin-bottom:16px;">
         <div class="mb-toolbar">
-          <span class="hint">여기서 수정하면 모바일 청첩장 페이지(invite.html)에 그대로 반영돼요.</span>
+          <span class="hint">시안을 여러 개 만들어 두고, 대표 시안으로 지정한 것이 기본 링크(invite.html)에 보여져요. 탭 이름은 더블클릭해서 수정.</span>
           <span class="info-save-state" id="inviteSaveState"></span>
         </div>
+        <div class="mb-tabbar" id="inviteTabBar"></div>
+      </div>
+
+      <div class="block" style="padding:16px; margin-bottom:16px;" id="inviteDraftActions">
+        <div class="invite-actions">
+          <span class="invite-badge" id="inviteActiveBadge"></span>
+          <button class="btn-ghost" id="inviteSetActiveBtn">대표 시안으로 지정</button>
+          <button class="btn-ghost" id="inviteDuplicateBtn">시안 복제</button>
+          <button class="btn-ghost" id="inviteCopyLinkBtn">링크 복사</button>
+          <a class="btn-ghost" id="invitePreviewLink" target="_blank" rel="noopener" style="text-decoration:none;">미리보기 ↗</a>
+        </div>
+      </div>
+
+      <div class="block" style="padding:16px; margin-bottom:16px;">
+        <div class="invite-section-title">기본 정보 <span class="hint">(블록에서 이름·일시·장소로 표시돼요)</span></div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-          <div class="field">
-            <label>신랑 이름</label>
-            <input type="text" id="inviteGroomName" placeholder="홍길동">
-          </div>
-          <div class="field">
-            <label>신부 이름</label>
-            <input type="text" id="inviteBrideName" placeholder="김철수">
-          </div>
-          <div class="field">
-            <label>예식 일시</label>
-            <input type="datetime-local" id="inviteDateTime">
-          </div>
-          <div class="field">
-            <label>장소명</label>
-            <input type="text" id="inviteVenueName" placeholder="OO웨딩홀 3층 그랜드홀">
-          </div>
+          <div class="field"><label>신랑 이름</label><input type="text" id="inviteGroomName" placeholder="홍길동"></div>
+          <div class="field"><label>신부 이름</label><input type="text" id="inviteBrideName" placeholder="김철수"></div>
+          <div class="field"><label>예식 일시</label><input type="datetime-local" id="inviteDateTime"></div>
+          <div class="field"><label>장소명</label><input type="text" id="inviteVenueName" placeholder="OO웨딩홀 3층 그랜드홀"></div>
+          <div class="field" style="grid-column:1 / -1;"><label>장소 주소</label><input type="text" id="inviteVenueAddress" placeholder="서울시 OO구 OO로 123"></div>
           <div class="field" style="grid-column:1 / -1;">
-            <label>장소 주소</label>
-            <input type="text" id="inviteVenueAddress" placeholder="서울시 OO구 OO로 123">
-          </div>
-          <div class="field" style="grid-column:1 / -1;">
-            <label>초대 글귀</label>
-            <textarea id="invitePhrase" rows="4" placeholder="저희 두 사람이 사랑과 믿음으로 하나 되는 자리에 소중한 분들을 모시고자 합니다."></textarea>
+            <label>네이버지도 검색어 <span class="hint">(비워두면 주소 → 장소명 순으로 검색)</span></label>
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="inviteMapQuery" placeholder="예: OO웨딩홀" style="flex:1;">
+              <a class="btn-ghost" id="inviteMapTestLink" target="_blank" rel="noopener" style="text-decoration:none; white-space:nowrap;">네이버지도 열기 ↗</a>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="block" style="padding:16px;">
-        <div class="mb-toolbar">
-          <span class="hint">사진은 여러 장 추가하면 청첩장에서 좌우로 넘기는 슬라이드로 보여져요. 드래그·Ctrl+V·클릭으로 추가하세요.</span>
+      <div class="block" style="padding:16px; margin-bottom:16px;">
+        <div class="invite-section-title">청첩장 구성 <span class="hint">(위에서 아래 순서로 표시 · 문구는 자유롭게 수정/추가/삭제)</span></div>
+        <div id="inviteBlocks" class="invite-blocks"></div>
+        <div class="invite-add-row">
+          <select id="inviteBlockType">
+            <option value="eyebrow">작은 문구 (예: WE ARE GETTING MARRIED)</option>
+            <option value="heading">제목 문구</option>
+            <option value="text">본문 글귀</option>
+            <option value="names">신랑·신부 이름</option>
+            <option value="photos">사진 슬라이드</option>
+            <option value="datetime">예식 일시</option>
+            <option value="venue">장소 + 네이버지도 버튼</option>
+            <option value="divider">구분선</option>
+          </select>
+          <button class="btn-primary" id="inviteAddBlockBtn">+ 블록 추가</button>
         </div>
+      </div>
+
+      <div class="block" style="padding:16px;">
+        <div class="invite-section-title">사진 <span class="hint">(이 시안 전용 · 여러 장이면 좌우로 넘기는 슬라이드 · 드래그/Ctrl+V/클릭)</span></div>
         <div id="inviteDropzone" class="invite-dropzone">
           <span>사진을 드래그하거나 Ctrl+V, 클릭해서 추가하세요</span>
           <input type="file" id="inviteFileInput" accept="image/*" multiple style="display:none;">
@@ -666,7 +705,7 @@ import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 import {
-  getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc
+  getFirestore, doc, setDoc, updateDoc, deleteField, onSnapshot, collection, deleteDoc
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
 /* ============ Firebase 초기화 ============ */
@@ -777,7 +816,7 @@ let mbPrintScope = 'all';
 let infoContent = '';
 let infoEditor = null;
 let infoSaveTimer = null;
-let invitation = {groomName:'', brideName:'', weddingDateTime:'', venueName:'', venueAddress:'', phrase:''};
+let inviteDrafts = {}; let inviteActiveId = null; let inviteCurId = 'main'; let inviteEditingId = null; let inviteActiveSaved = false; let inviteHasDrafts = false;
 let invitationPhotos = [];
 let inviteSaveTimer = null;
 let guests = [];                    // 하객 목록 (order 순)
@@ -1011,18 +1050,87 @@ function bindInfoSheet(){
 }
 
 /* ============ 청첩장 관리 ============ */
-async function saveInvitation(){
+const BLOCK_LABELS = {
+  photos:'사진 슬라이드', eyebrow:'작은 문구', heading:'제목 문구', names:'신랑·신부 이름',
+  text:'본문 글귀', divider:'구분선', datetime:'예식 일시', venue:'장소 + 네이버지도 버튼'
+};
+const TEXT_BLOCKS = ['eyebrow','heading','text'];
+function defaultBlocks(phrase){
+  return [
+    {id:uid(), type:'photos'},
+    {id:uid(), type:'eyebrow', text:'WE ARE GETTING MARRIED'},
+    {id:uid(), type:'names'},
+    {id:uid(), type:'text', text: phrase || '저희 두 사람이 사랑과 믿음으로 하나 되는 자리에 소중한 분들을 모시고자 합니다.'},
+    {id:uid(), type:'divider'},
+    {id:uid(), type:'datetime'},
+    {id:uid(), type:'venue'}
+  ];
+}
+function newDraft(name, order){
+  return { id:uid(), name:name, order:order, groomName:'', brideName:'', weddingDateTime:'', venueName:'', venueAddress:'', mapQuery:'', blocks:defaultBlocks() };
+}
+function naverMapUrl(d){
+  const q = (d.mapQuery || d.venueAddress || d.venueName || '').trim();
+  return q ? 'https://map.naver.com/p/search/' + encodeURIComponent(q) : 'https://map.naver.com/';
+}
+function sortedDrafts(){
+  return Object.values(inviteDrafts).sort((a,b)=> (a.order||0)-(b.order||0));
+}
+function curDraft(){ return inviteDrafts[inviteCurId] || null; }
+function draftPhotos(id){
+  return invitationPhotos.filter(p => (p.inviteId || 'main') === id);
+}
+
+// 문서 → 로컬 상태 (구버전 평면 문서는 '메인 시안'으로 변환)
+function applyInviteSnapshot(data){
+  data = data || {};
+  let drafts = {};
+  if(data.drafts && Object.keys(data.drafts).length){
+    Object.keys(data.drafts).forEach(id => {
+      const d = data.drafts[id];
+      drafts[id] = Object.assign({id:id, name:'시안', order:0, groomName:'', brideName:'', weddingDateTime:'', venueName:'', venueAddress:'', mapQuery:'', blocks:[]}, d);
+    });
+  }else{
+    drafts.main = {
+      id:'main', name:'메인 시안', order:0,
+      groomName:data.groomName||'', brideName:data.brideName||'', weddingDateTime:data.weddingDateTime||'',
+      venueName:data.venueName||'', venueAddress:data.venueAddress||'', mapQuery:'',
+      blocks: defaultBlocks(data.phrase)
+    };
+  }
+  // 편집 중인 현재 시안은 저장 대기 중이면 덮어쓰지 않음
+  if(inviteSaveTimer && inviteDrafts[inviteCurId]) drafts[inviteCurId] = inviteDrafts[inviteCurId];
+  inviteDrafts = drafts;
+  inviteActiveId = (data.activeId && drafts[data.activeId]) ? data.activeId : sortedDrafts()[0].id;
+  if(!inviteDrafts[inviteCurId]) inviteCurId = inviteActiveId;
+}
+
+async function saveDraftNow(d){
   try{
-    await setDoc(invitationRef, invitation);
+    const payload = { drafts: inviteHasDrafts ? { [d.id]: d } : Object.assign({}, inviteDrafts) };
+    if(!inviteActiveSaved) { payload.activeId = inviteActiveId; }
+    await setDoc(invitationRef, payload, {merge:true});
+    inviteActiveSaved = true; inviteHasDrafts = true;
     const el = $('#inviteSaveState');
     if(el) el.textContent = '저장됨 · ' + new Date().toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'});
   }catch(e){ console.error('invitation save failed', e); }
+}
+async function saveCurDraft(){
+  inviteSaveTimer = null;
+  const d = curDraft();
+  if(d) await saveDraftNow(d);
 }
 function scheduleInviteSave(){
   const el = $('#inviteSaveState');
   if(el) el.textContent = '저장 중...';
   clearTimeout(inviteSaveTimer);
-  inviteSaveTimer = setTimeout(saveInvitation, 600);
+  inviteSaveTimer = setTimeout(saveCurDraft, 600);
+}
+async function setActiveDraft(id){
+  inviteActiveId = id;
+  try{ await setDoc(invitationRef, { activeId:id }, {merge:true}); inviteActiveSaved = true; }
+  catch(e){ console.error(e); }
+  renderInviteAll();
 }
 async function saveInvitationPhoto(photo){
   try{ await setDoc(doc(db, 'invitationPhotos', photo.id), photo); }
@@ -1033,20 +1141,210 @@ async function deleteInvitationPhoto(id){
   catch(e){ console.error('invitation photo delete failed', e); }
 }
 
-function renderInvitationForm(){
-  const setVal = (id, val) => { const el = $('#'+id); if(el && document.activeElement !== el) el.value = val || ''; };
-  setVal('inviteGroomName', invitation.groomName);
-  setVal('inviteBrideName', invitation.brideName);
-  setVal('inviteDateTime', invitation.weddingDateTime);
-  setVal('inviteVenueName', invitation.venueName);
-  setVal('inviteVenueAddress', invitation.venueAddress);
-  setVal('invitePhrase', invitation.phrase);
+/* ---- 탭 ---- */
+function renderInviteTabs(){
+  const bar = $('#inviteTabBar');
+  bar.innerHTML = '';
+  const list = sortedDrafts();
+  list.forEach(d => {
+    const tab = document.createElement('div');
+    tab.className = 'mb-tab' + (d.id === inviteCurId ? ' active' : '');
+    if(inviteEditingId === d.id){
+      const input = document.createElement('input');
+      input.className = 'mb-tab-name-input';
+      input.value = d.name;
+      tab.appendChild(input);
+      const commit = () => {
+        const v = input.value.trim();
+        inviteEditingId = null;
+        if(v && v !== d.name){ d.name = v; saveDraftNow(d); }
+        renderInviteTabs();
+      };
+      input.addEventListener('keydown', ev => {
+        if(ev.key === 'Enter') commit();
+        if(ev.key === 'Escape'){ inviteEditingId = null; renderInviteTabs(); }
+      });
+      input.addEventListener('blur', commit);
+      input.addEventListener('click', ev => ev.stopPropagation());
+      setTimeout(() => { input.focus(); input.select(); }, 0);
+    }else{
+      const label = document.createElement('span');
+      label.textContent = (d.id === inviteActiveId ? '★ ' : '') + d.name;
+      label.addEventListener('dblclick', ev => { ev.stopPropagation(); inviteEditingId = d.id; renderInviteTabs(); });
+      tab.appendChild(label);
+    }
+    if(list.length > 1){
+      const x = document.createElement('span');
+      x.className = 'mb-tab-x';
+      x.textContent = '✕';
+      x.title = '시안 삭제';
+      x.addEventListener('click', ev => {
+        ev.stopPropagation();
+        if(confirm(`'${d.name}' 시안을 삭제할까요? 시안의 사진도 함께 삭제돼요.`)) deleteDraft(d.id);
+      });
+      tab.appendChild(x);
+    }
+    tab.addEventListener('click', () => {
+      if(inviteEditingId === d.id || inviteCurId === d.id) return;
+      clearTimeout(inviteSaveTimer);
+      if(inviteSaveTimer){ saveCurDraft(); }
+      inviteCurId = d.id;
+      renderInviteAll(true);
+    });
+    bar.appendChild(tab);
+  });
+  const add = document.createElement('div');
+  add.className = 'mb-tab mb-tab-add';
+  add.textContent = '+';
+  add.title = '시안 추가';
+  add.addEventListener('click', async () => {
+    const maxOrder = list.reduce((m,d)=> Math.max(m, d.order||0), -1);
+    const nd = newDraft('시안 ' + (list.length+1), maxOrder+1);
+    const cur = curDraft();
+    if(cur){ nd.groomName = cur.groomName; nd.brideName = cur.brideName; nd.weddingDateTime = cur.weddingDateTime; nd.venueName = cur.venueName; nd.venueAddress = cur.venueAddress; nd.mapQuery = cur.mapQuery; }
+    inviteDrafts[nd.id] = nd;
+    inviteCurId = nd.id;
+    renderInviteAll(true);
+    await saveDraftNow(nd);
+  });
+  bar.appendChild(add);
 }
 
+async function deleteDraft(id){
+  const photos = draftPhotos(id);
+  delete inviteDrafts[id];
+  if(inviteCurId === id) inviteCurId = sortedDrafts()[0].id;
+  if(inviteActiveId === id) inviteActiveId = sortedDrafts()[0].id;
+  renderInviteAll(true);
+  try{
+    await updateDoc(invitationRef, { ['drafts.'+id]: deleteField(), activeId: inviteActiveId });
+    await Promise.all(photos.map(p => deleteDoc(doc(db, 'invitationPhotos', p.id))));
+  }catch(e){ console.error('draft delete failed', e); }
+}
+async function duplicateDraft(){
+  const src = curDraft(); if(!src) return;
+  const list = sortedDrafts();
+  const nd = JSON.parse(JSON.stringify(src));
+  nd.id = uid();
+  nd.name = src.name + ' 복사';
+  nd.order = list.reduce((m,d)=> Math.max(m, d.order||0), -1) + 1;
+  nd.blocks = (src.blocks || []).map(b => Object.assign({}, b, {id:uid()}));
+  inviteDrafts[nd.id] = nd;
+  inviteCurId = nd.id;
+  const photos = draftPhotos(src.id).map(p => Object.assign({}, p, {id:uid(), inviteId:nd.id}));
+  invitationPhotos = invitationPhotos.concat(photos);
+  renderInviteAll(true);
+  await saveDraftNow(nd);
+  await Promise.all(photos.map(saveInvitationPhoto));
+}
+
+/* ---- 폼 / 액션 ---- */
+function renderInviteForm(force){
+  const d = curDraft(); if(!d) return;
+  const setVal = (id, val) => { const el = $('#'+id); if(el && (force || document.activeElement !== el)) el.value = val || ''; };
+  setVal('inviteGroomName', d.groomName);
+  setVal('inviteBrideName', d.brideName);
+  setVal('inviteDateTime', d.weddingDateTime);
+  setVal('inviteVenueName', d.venueName);
+  setVal('inviteVenueAddress', d.venueAddress);
+  setVal('inviteMapQuery', d.mapQuery);
+  $('#inviteMapTestLink').href = naverMapUrl(d);
+  const isActive = d.id === inviteActiveId;
+  const badge = $('#inviteActiveBadge');
+  badge.textContent = isActive ? '★ 대표 시안 (기본 링크에 표시 중)' : '대표 시안 아님';
+  badge.classList.toggle('on', isActive);
+  $('#inviteSetActiveBtn').disabled = isActive;
+  $('#invitePreviewLink').href = inviteLinkFor(d.id);
+}
+function inviteLinkFor(id){
+  return new URL('invite.html', location.href).href.split('?')[0] + '?d=' + encodeURIComponent(id);
+}
+
+/* ---- 블록 에디터 ---- */
+function inviteBlockSig(d){ return (d.blocks||[]).map(b => b.id+':'+b.type).join('|'); }
+function renderInviteBlocks(force){
+  const box = $('#inviteBlocks');
+  const d = curDraft(); if(!d) return;
+  if(!force && box.contains(document.activeElement)) return;
+  box.innerHTML = '';
+  const blocks = d.blocks || (d.blocks = []);
+  blocks.forEach((b, idx) => {
+    const card = document.createElement('div');
+    card.className = 'invite-block';
+    const head = document.createElement('div');
+    head.className = 'invite-block-head';
+    const title = document.createElement('span');
+    title.textContent = (idx+1) + '. ' + (BLOCK_LABELS[b.type] || b.type);
+    head.appendChild(title);
+    const sp = document.createElement('span'); sp.className = 'spacer'; head.appendChild(sp);
+    const mk = (txt, tip, fn, dis, cls) => {
+      const bt = document.createElement('button');
+      bt.textContent = txt; bt.title = tip; bt.disabled = !!dis;
+      if(cls) bt.className = cls;
+      bt.addEventListener('click', fn);
+      head.appendChild(bt);
+    };
+    mk('▲', '위로', () => moveBlock(idx, -1), idx === 0);
+    mk('▼', '아래로', () => moveBlock(idx, 1), idx === blocks.length-1);
+    mk('✕', '블록 삭제', () => deleteBlock(idx), false, 'del');
+    card.appendChild(head);
+
+    if(b.type === 'text'){
+      const ta = document.createElement('textarea');
+      ta.rows = 4; ta.value = b.text || '';
+      ta.addEventListener('input', () => { b.text = ta.value; scheduleInviteSave(); });
+      card.appendChild(ta);
+    }else if(TEXT_BLOCKS.includes(b.type)){
+      const inp = document.createElement('input');
+      inp.type = 'text'; inp.value = b.text || '';
+      inp.addEventListener('input', () => { b.text = inp.value; scheduleInviteSave(); });
+      card.appendChild(inp);
+    }else{
+      const note = document.createElement('div');
+      note.className = 'note';
+      note.textContent = {
+        photos:'아래 「사진」에 등록한 사진이 슬라이드로 표시돼요.',
+        names:'기본 정보의 신랑·신부 이름이 표시돼요.',
+        datetime:'기본 정보의 예식 일시가 표시돼요.',
+        venue:'장소명·주소와 「네이버지도로 보기」 버튼이 표시돼요.',
+        divider:'얇은 구분선이 표시돼요.'
+      }[b.type] || '';
+      card.appendChild(note);
+    }
+    box.appendChild(card);
+  });
+}
+function moveBlock(i, dir){
+  const d = curDraft(); const j = i + dir;
+  if(!d || j < 0 || j >= d.blocks.length) return;
+  const t = d.blocks[i]; d.blocks[i] = d.blocks[j]; d.blocks[j] = t;
+  renderInviteBlocks(true);
+  scheduleInviteSave();
+}
+function deleteBlock(i){
+  const d = curDraft(); if(!d) return;
+  d.blocks.splice(i, 1);
+  renderInviteBlocks(true);
+  scheduleInviteSave();
+}
+function addBlock(){
+  const d = curDraft(); if(!d) return;
+  const type = $('#inviteBlockType').value;
+  const b = {id:uid(), type:type};
+  if(TEXT_BLOCKS.includes(type)) b.text = '';
+  d.blocks.push(b);
+  renderInviteBlocks(true);
+  scheduleInviteSave();
+  const inputs = $('#inviteBlocks').querySelectorAll('input,textarea');
+  if(TEXT_BLOCKS.includes(type) && inputs.length) inputs[inputs.length-1].focus();
+}
+
+/* ---- 사진 ---- */
 function renderInvitationPhotos(){
   const strip = $('#invitePhotoStrip');
   strip.innerHTML = '';
-  invitationPhotos.forEach((p, idx) => {
+  const list = draftPhotos(inviteCurId);
+  list.forEach((p, idx) => {
     const card = document.createElement('div');
     card.className = 'invite-photo-card';
     const img = document.createElement('img');
@@ -1065,46 +1363,66 @@ function renderInvitationPhotos(){
     const leftBtn = document.createElement('button');
     leftBtn.textContent = '◀';
     leftBtn.disabled = idx === 0;
-    leftBtn.addEventListener('click', () => swapInvitationPhotoOrder(idx, idx-1));
+    leftBtn.addEventListener('click', () => swapInvitationPhotoOrder(list, idx, idx-1));
     const rightBtn = document.createElement('button');
     rightBtn.textContent = '▶';
-    rightBtn.disabled = idx === invitationPhotos.length-1;
-    rightBtn.addEventListener('click', () => swapInvitationPhotoOrder(idx, idx+1));
+    rightBtn.disabled = idx === list.length-1;
+    rightBtn.addEventListener('click', () => swapInvitationPhotoOrder(list, idx, idx+1));
     orderBtns.appendChild(leftBtn);
     orderBtns.appendChild(rightBtn);
     card.appendChild(orderBtns);
-
     strip.appendChild(card);
   });
 }
-
-function swapInvitationPhotoOrder(i, j){
-  if(j < 0 || j >= invitationPhotos.length) return;
-  const a = invitationPhotos[i], b = invitationPhotos[j];
+function swapInvitationPhotoOrder(list, i, j){
+  if(j < 0 || j >= list.length) return;
+  const a = list[i], b = list[j];
   const tmp = a.order; a.order = b.order; b.order = tmp;
   saveInvitationPhoto(a);
   saveInvitationPhoto(b);
 }
-
 async function addInvitationPhotoFile(file){
   if(!file || file.type.indexOf('image') !== 0) return;
+  const targetId = inviteCurId;
   const res = await compressImage(file);
-  const maxOrder = invitationPhotos.reduce((m,p)=> Math.max(m, p.order||0), -1);
-  const photo = { id: uid(), order: maxOrder+1, image: res.url, kb: res.kb };
+  const maxOrder = draftPhotos(targetId).reduce((m,p)=> Math.max(m, p.order||0), -1);
+  const photo = { id: uid(), inviteId: targetId, order: maxOrder+1, image: res.url, kb: res.kb };
   invitationPhotos.push(photo);
+  renderInvitationPhotos();
   await saveInvitationPhoto(photo);
 }
 
+function renderInviteAll(force){
+  if(!curDraft()) return;
+  renderInviteTabs();
+  renderInviteForm(force);
+  renderInviteBlocks(force);
+  renderInvitationPhotos();
+}
+
 function bindInvitationTab(){
-  ['inviteGroomName','inviteBrideName','inviteDateTime','inviteVenueName','inviteVenueAddress','invitePhrase'].forEach(id => {
+  const fieldMap = {
+    inviteGroomName:'groomName', inviteBrideName:'brideName', inviteDateTime:'weddingDateTime',
+    inviteVenueName:'venueName', inviteVenueAddress:'venueAddress', inviteMapQuery:'mapQuery'
+  };
+  Object.keys(fieldMap).forEach(id => {
     $('#'+id).addEventListener('input', ev => {
-      const fieldMap = {
-        inviteGroomName:'groomName', inviteBrideName:'brideName', inviteDateTime:'weddingDateTime',
-        inviteVenueName:'venueName', inviteVenueAddress:'venueAddress', invitePhrase:'phrase'
-      };
-      invitation[fieldMap[id]] = ev.target.value;
+      const d = curDraft(); if(!d) return;
+      d[fieldMap[id]] = ev.target.value;
+      $('#inviteMapTestLink').href = naverMapUrl(d);
       scheduleInviteSave();
     });
+  });
+  $('#inviteAddBlockBtn').addEventListener('click', addBlock);
+  $('#inviteSetActiveBtn').addEventListener('click', () => { const d = curDraft(); if(d) setActiveDraft(d.id); });
+  $('#inviteDuplicateBtn').addEventListener('click', duplicateDraft);
+  $('#inviteCopyLinkBtn').addEventListener('click', async () => {
+    const d = curDraft(); if(!d) return;
+    const url = inviteLinkFor(d.id);
+    const btn = $('#inviteCopyLinkBtn');
+    try{ await navigator.clipboard.writeText(url); btn.textContent = '복사됨 ✓'; }
+    catch(e){ prompt('링크를 복사하세요', url); }
+    setTimeout(() => { btn.textContent = '링크 복사'; }, 1500);
   });
 
   const dropzone = $('#inviteDropzone');
@@ -1495,13 +1813,16 @@ function startListeners(){
   }, err => console.error('info note listener error', err)));
 
   unsubscribers.push(onSnapshot(invitationRef, snap => {
-    invitation = snap.exists() ? Object.assign({groomName:'', brideName:'', weddingDateTime:'', venueName:'', venueAddress:'', phrase:''}, snap.data()) : {groomName:'', brideName:'', weddingDateTime:'', venueName:'', venueAddress:'', phrase:''};
-    renderInvitationForm();
+    const data = snap.exists() ? snap.data() : {};
+    inviteActiveSaved = !!data.activeId;
+    inviteHasDrafts = !!(data.drafts && Object.keys(data.drafts).length);
+    applyInviteSnapshot(data);
+    renderInviteAll(false);
   }, err => console.error('invitation listener error', err)));
 
   unsubscribers.push(onSnapshot(invitationPhotosCol, snap => {
     invitationPhotos = snap.docs.map(d => d.data()).sort((a,b)=> (a.order||0)-(b.order||0));
-    renderInvitationPhotos();
+    if(curDraft()) renderInvitationPhotos();
   }, err => console.error('invitation photos listener error', err)));
 
   unsubscribers.push(onSnapshot(guestsCol, snap => {
@@ -2378,7 +2699,7 @@ function showLogin(){
   infoContent = '';
   if(infoEditor){ infoEditor.value(''); }
   else{ const ta = document.getElementById('infoEditor'); if(ta) ta.value=''; }
-  invitation = {groomName:'', brideName:'', weddingDateTime:'', venueName:'', venueAddress:'', phrase:''};
+  inviteDrafts = {}; inviteActiveId = null; inviteCurId = 'main'; inviteEditingId = null; inviteActiveSaved = false; inviteHasDrafts = false; clearTimeout(inviteSaveTimer); inviteSaveTimer = null;
   invitationPhotos = [];
   resetGuestView();
   $('#appRoot').style.display = 'none';
