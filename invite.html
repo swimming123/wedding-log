@@ -3,7 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<!-- OG-START -->
 <title>모바일 청첩장</title>
+<meta name="description" content="소중한 분들을 초대합니다">
+<meta property="og:type" content="website">
+<meta property="og:title" content="모바일 청첩장">
+<meta property="og:description" content="소중한 분들을 초대합니다">
+<!-- OG-END -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -192,9 +198,27 @@ function buildCarousel(list){
   return wrap;
 }
 
+function setMeta(attr, key, val){
+  let m = document.head.querySelector(`meta[${attr}="${key}"]`);
+  if(!val){ if(m) m.remove(); return; }
+  if(!m){ m = document.createElement('meta'); m.setAttribute(attr, key); document.head.appendChild(m); }
+  m.setAttribute('content', val);
+}
+// 브라우저 탭 제목 등 (※ 카카오톡 등 크롤러는 위 OG-START~OG-END 정적 태그만 읽음)
+function applyMeta(d){
+  const f = (d.ogImage || '').trim();
+  const title = (d.ogTitle || '').trim() || ((d.groomName && d.brideName) ? `${d.groomName} ♥ ${d.brideName} 결혼합니다` : '');
+  const t = fmtDateTime(d.weddingDateTime);
+  const desc = (d.ogDescription || '').trim() || [t.main !== '-' ? (t.main + ' ' + t.sub).trim() : '', d.venueName].filter(Boolean).join(' · ');
+  if(title){ document.title = title; setMeta('property','og:title', title); }
+  if(desc){ setMeta('name','description', desc); setMeta('property','og:description', desc); }
+  if(f){ try{ setMeta('property','og:image', new URL(f, location.href).href); }catch(e){} }
+}
+
 function render(){
   if(!gotInv || !gotPhotos) return;
   const { id, d, blocks } = pickDraft();
+  applyMeta(d);
   const list = photos.filter(p => (p.inviteId || 'main') === id);
   const card = $('#card'), content = $('#content');
   // 사진 블록은 카드 맨 위(content 바깥)에 있으면 전체 폭으로 보이도록 처리
