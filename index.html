@@ -315,6 +315,21 @@
   .invite-block-head button.del:hover{ background:var(--error-bg); color:var(--error); }
   .invite-block textarea, .invite-block input[type=text]{ width:100%; margin-top:6px; box-sizing:border-box; font:inherit; font-size:13px; padding:6px 8px; border:1px solid var(--border); border-radius:4px; }
   .invite-block .note{ font-size:12px; color:var(--text-secondary); margin-top:4px; }
+  .mt-conn{ margin-bottom:12px; }
+  .mt-conn summary{ cursor:pointer; color:var(--primary); font-size:13px; margin-bottom:8px; }
+  .mt-row{ display:flex; gap:10px; flex-wrap:wrap; }
+  .mt-row > .field{ flex:1 1 160px; }
+  .mt-row select{ padding:6px 8px; border:1px solid var(--border); border-radius:4px; font:inherit; font-size:13px; }
+  .mt-grid{ display:grid; grid-template-columns:1fr 340px; gap:20px; }
+  @media(max-width:900px){ .mt-grid{ grid-template-columns:1fr; } }
+  .mt-status{ font-size:13px; margin-top:10px; min-height:18px; white-space:pre-wrap; }
+  .mt-status.err{ color:var(--error); } .mt-status.ok{ color:#2E7D32; }
+  .mt-preview{ border:1px solid var(--border); border-radius:8px; overflow:hidden; background:#fff; margin-top:4px; }
+  .mt-preview-img{ aspect-ratio:1200/630; background:#EEE center/cover no-repeat; display:flex; align-items:center; justify-content:center; color:var(--text-secondary); font-size:12px; }
+  .mt-preview-txt{ padding:10px 12px; }
+  .mt-preview-txt .t{ font-weight:500; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .mt-preview-txt .d{ font-size:12px; color:var(--text-secondary); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .mt-preview-txt .u{ font-size:11px; color:#9E9E9E; margin-top:4px; }
   .invite-add-row{ display:flex; gap:8px; }
   .invite-add-row select{ flex:1; padding:6px 8px; border:1px solid var(--border); border-radius:4px; font:inherit; font-size:13px; }
 
@@ -639,23 +654,50 @@
       </div>
 
       <div class="block" style="padding:16px; margin-bottom:16px;">
-        <div class="invite-section-title">링크 미리보기 (메타태그) <span class="hint">(카카오톡·문자로 링크를 보낼 때 뜨는 제목/설명/썸네일)</span></div>
-        <div style="display:grid; grid-template-columns:1fr; gap:12px;">
-          <div class="field"><label>제목 <span class="hint">(비우면 "신랑 ♥ 신부 결혼합니다")</span></label><input type="text" id="inviteOgTitle" placeholder="OO ♥ OO 결혼합니다"></div>
-          <div class="field"><label>설명 <span class="hint">(비우면 예식 일시·장소)</span></label><input type="text" id="inviteOgDesc" placeholder="2027년 5월 1일 토요일 오후 2시 · OO웨딩홀"></div>
-          <div class="field">
-            <label>썸네일 이미지 파일명 <span class="hint">(저장소에 올린 파일, 예: og.jpg)</span></label>
-            <div style="display:flex; gap:8px;">
-              <input type="text" id="inviteOgImage" placeholder="og.jpg" style="flex:1;">
-              <button class="btn-ghost" id="inviteOgThumbBtn" style="white-space:nowrap;">이 시안 첫 사진으로 썸네일 만들기</button>
-            </div>
+        <div class="invite-section-title">링크 미리보기 (메타태그) <span class="hint">(카카오톡·문자로 링크를 보낼 때 뜨는 제목/설명/썸네일 · 모든 시안 공통 · invite.html 에 바로 저장)</span></div>
+        <details class="mt-conn" id="mtConn">
+          <summary>GitHub 연결 설정</summary>
+          <div class="mt-row">
+            <div class="field"><label>저장소 (소유자/이름)</label><input type="text" id="mtRepo" value="swimming123/wedding-log"></div>
+            <div class="field"><label>브랜치</label><input type="text" id="mtBranch" value="main"></div>
+            <div class="field"><label>수정할 파일</label><input type="text" id="mtPath" value="invite.html"></div>
           </div>
           <div class="field">
-            <label>invite.html 에 넣을 메타태그 코드 <button class="btn-ghost" id="inviteMetaCopyBtn" style="margin-left:8px;">코드 복사</button></label>
-            <textarea id="inviteMetaCode" rows="9" readonly style="font-family:monospace; font-size:12px; width:100%; box-sizing:border-box;"></textarea>
-            <div class="hint" style="margin-top:6px; line-height:1.6;">
-              ※ 카카오톡 등은 자바스크립트를 실행하지 않고 <b>invite.html 파일 안에 적힌 메타태그</b>만 읽어요. 그래서 위 코드를 invite.html 의 <code>&lt;!-- OG-START --&gt;</code> ~ <code>&lt;!-- OG-END --&gt;</code> 사이에 붙여넣어 커밋해야 반영돼요.<br>
-              ※ 썸네일 파일은 invite.html 과 같은 폴더(저장소 최상위)에 올려주세요. 이미 공유한 링크의 미리보기가 안 바뀌면 카카오 공유 디버거에서 해당 URL의 캐시를 초기화하세요.
+            <label>GitHub 토큰 (Fine-grained · 이 저장소만 · Contents: Read and write)</label>
+            <input type="password" id="mtToken" placeholder="github_pat_..." autocomplete="off">
+          </div>
+          <label class="hint" style="display:block; margin-bottom:6px;"><input type="checkbox" id="mtRemember"> 이 브라우저에 토큰 기억 (공용 PC에서는 체크하지 마세요)</label>
+          <div class="hint" style="line-height:1.7;">토큰 만들기: GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token → Repository access: <b>Only select repositories</b>(wedding-log) → Permissions: <b>Contents: Read and write</b>. 토큰은 GitHub로만 전송돼요.</div>
+        </details>
+        <div class="mt-grid">
+          <div>
+            <div class="field"><label>제목</label><input type="text" id="mtTitle" placeholder="OO ♥ OO 결혼합니다"></div>
+            <div class="field"><label>설명</label><textarea id="mtDesc" rows="3" placeholder="2027년 5월 1일 토요일 오후 2시 · OO웨딩홀"></textarea></div>
+            <div class="field">
+              <label>썸네일 이미지 <span class="hint">(선택하지 않으면 기존 이미지 유지 · 1200×630, 300KB 이하로 자동 변환)</span></label>
+              <div class="mt-row" style="align-items:center;">
+                <select id="mtPhotoSel"></select>
+                <button class="btn-ghost" id="mtPhotoBtn">선택한 사진 사용</button>
+                <button class="btn-ghost" id="mtUploadBtn">내 이미지 파일</button>
+                <input type="file" id="mtFile" accept="image/*" style="display:none;">
+                <span class="hint" id="mtImgInfo"></span>
+              </div>
+              <label class="hint" style="display:block; margin-top:6px;"><input type="checkbox" id="mtStamp" checked> 파일명에 날짜 붙이기 (카카오 캐시로 이미지가 안 바뀌는 문제 방지)</label>
+            </div>
+            <div class="field"><label>현재 이미지 주소</label><input type="text" id="mtImgUrl" placeholder="https://.../og.jpg"></div>
+            <div class="field"><label>링크 주소 (og:url)</label><input type="text" id="mtPageUrl"></div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <button class="btn-ghost" id="mtLoadBtn">현재 값 불러오기</button>
+              <button class="btn-primary" id="mtSaveBtn">GitHub에 저장</button>
+            </div>
+            <div id="mtStatus" class="mt-status"></div>
+            <div class="hint" style="margin-top:6px; line-height:1.6;">저장 후 반영까지 1~2분 걸려요. 이미 공유한 링크는 <a href="https://developers.kakao.com/tool/debugger/sharing" target="_blank" rel="noopener">카카오 공유 디버거</a>에서 캐시를 초기화해주세요.</div>
+          </div>
+          <div>
+            <label class="hint">미리보기</label>
+            <div class="mt-preview">
+              <div class="mt-preview-img" id="mtPvImg">이미지 없음</div>
+              <div class="mt-preview-txt"><div class="t" id="mtPvTitle"></div><div class="d" id="mtPvDesc"></div><div class="u" id="mtPvUrl"></div></div>
             </div>
           </div>
         </div>
@@ -1224,7 +1266,7 @@ function renderInviteTabs(){
     const maxOrder = list.reduce((m,d)=> Math.max(m, d.order||0), -1);
     const nd = newDraft('시안 ' + (list.length+1), maxOrder+1);
     const cur = curDraft();
-    if(cur){ nd.groomName = cur.groomName; nd.brideName = cur.brideName; nd.weddingDateTime = cur.weddingDateTime; nd.venueName = cur.venueName; nd.venueAddress = cur.venueAddress; nd.mapQuery = cur.mapQuery; nd.ogTitle = cur.ogTitle; nd.ogDescription = cur.ogDescription; nd.ogImage = cur.ogImage; }
+    if(cur){ nd.groomName = cur.groomName; nd.brideName = cur.brideName; nd.weddingDateTime = cur.weddingDateTime; nd.venueName = cur.venueName; nd.venueAddress = cur.venueAddress; nd.mapQuery = cur.mapQuery; }
     inviteDrafts[nd.id] = nd;
     inviteCurId = nd.id;
     renderInviteAll(true);
@@ -1271,10 +1313,6 @@ function renderInviteForm(force){
   setVal('inviteVenueName', d.venueName);
   setVal('inviteVenueAddress', d.venueAddress);
   setVal('inviteMapQuery', d.mapQuery);
-  setVal('inviteOgTitle', d.ogTitle);
-  setVal('inviteOgDesc', d.ogDescription);
-  setVal('inviteOgImage', d.ogImage);
-  renderMetaSnippet();
   $('#inviteMapTestLink').href = naverMapUrl(d);
   const isActive = d.id === inviteActiveId;
   const badge = $('#inviteActiveBadge');
@@ -1368,6 +1406,7 @@ function addBlock(){
 
 /* ---- 사진 ---- */
 function renderInvitationPhotos(){
+  updateMtPhotoSel();
   const strip = $('#invitePhotoStrip');
   strip.innerHTML = '';
   const list = draftPhotos(inviteCurId);
@@ -1419,62 +1458,219 @@ async function addInvitationPhotoFile(file){
   await saveInvitationPhoto(photo);
 }
 
-/* ---- 링크 미리보기(메타태그) ---- */
-function fmtKoDate(dtStr){
-  const t = new Date(dtStr); if(!dtStr || isNaN(t)) return '';
-  const days = ['일','월','화','수','목','금','토'];
-  const h = t.getHours(), m = t.getMinutes();
-  return `${t.getFullYear()}년 ${t.getMonth()+1}월 ${t.getDate()}일 ${days[t.getDay()]}요일 ${h<12?'오전':'오후'} ${(h%12)||12}시${m?(' '+m+'분'):''}`;
+/* ============ 링크 미리보기(메타태그) 편집 → GitHub 저장 ============ */
+const MT_TOKEN_KEY = 'metaEditorToken';
+const MT_OG_RE = /<!-- OG-START -->[\s\S]*?<!-- OG-END -->/;
+let mtNewImage = null;
+function mtLsGet(){ try{ return localStorage.getItem(MT_TOKEN_KEY) || ''; }catch(e){ return ''; } }
+function mtLsSet(v){ try{ if(v) localStorage.setItem(MT_TOKEN_KEY, v); else localStorage.removeItem(MT_TOKEN_KEY); }catch(e){} }
+function mtStatus(msg, cls){ const el = $('#mtStatus'); el.textContent = msg; el.className = 'mt-status ' + (cls || ''); }
+function mtRepo(){
+  const parts = $('#mtRepo').value.trim().split('/');
+  return { owner: parts[0], name: parts[1], branch: $('#mtBranch').value.trim() || 'main', path: $('#mtPath').value.trim() };
 }
-function effectiveMeta(d){
-  const title = (d.ogTitle || '').trim() || ((d.groomName && d.brideName) ? `${d.groomName} ♥ ${d.brideName} 결혼합니다` : '모바일 청첩장');
-  const desc = (d.ogDescription || '').trim() || [fmtKoDate(d.weddingDateTime), d.venueName].filter(Boolean).join(' · ') || '소중한 분들을 초대합니다';
-  let img = '';
-  const f = (d.ogImage || '').trim();
-  if(f){ try{ img = new URL(f, new URL('invite.html', location.href)).href; }catch(e){} }
-  return { title, desc, img, url: new URL('invite.html', location.href).href.split('?')[0] };
+function mtDefaultPageUrl(){ const r = mtRepo(); return `https://${r.owner}.github.io/${r.name}/${r.path}`; }
+function mtApi(url, opt){
+  opt = opt || {};
+  opt.headers = Object.assign({
+    'Authorization': 'Bearer ' + $('#mtToken').value.trim(),
+    'Accept': 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28'
+  }, opt.headers || {});
+  return fetch(url, opt);
 }
-function escAttr(v){ return String(v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function renderMetaSnippet(){
-  const d = curDraft(); const ta = $('#inviteMetaCode'); if(!d || !ta) return;
-  const m = effectiveMeta(d);
-  const lines = [
-    '<title>' + escAttr(m.title) + '</title>',
-    '<meta name="description" content="' + escAttr(m.desc) + '">',
+async function mtExplain(res){
+  let m = ''; try{ m = (await res.json()).message || ''; }catch(e){}
+  const hint = res.status === 401 ? '토큰이 올바르지 않아요.'
+    : res.status === 403 ? '토큰 권한이 부족해요. Contents: Read and write 인지 확인해주세요.'
+    : res.status === 404 ? '저장소/브랜치/파일을 찾지 못했어요. 토큰이 이 저장소를 포함하는지도 확인해주세요.'
+    : (res.status === 409 || res.status === 422) ? '다른 변경과 충돌했어요. 다시 불러온 뒤 저장해주세요.' : '';
+  return `GitHub 오류 ${res.status}: ${m}${hint ? '\n' + hint : ''}`;
+}
+function mtB64ToUtf8(b64){
+  const bin = atob(b64.replace(/\n/g, ''));
+  return new TextDecoder('utf-8').decode(Uint8Array.from(bin, c => c.charCodeAt(0)));
+}
+function mtUtf8ToB64(str){
+  const bytes = new TextEncoder().encode(str);
+  let bin = ''; bytes.forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin);
+}
+function mtEsc(v){ return String(v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function mtBuildBlock(m){
+  const L = [
+    '<!-- OG-START -->',
+    `<title>${mtEsc(m.title)}</title>`,
+    `<meta name="description" content="${mtEsc(m.desc)}">`,
     '<meta property="og:type" content="website">',
-    '<meta property="og:title" content="' + escAttr(m.title) + '">',
-    '<meta property="og:description" content="' + escAttr(m.desc) + '">',
-    '<meta property="og:url" content="' + escAttr(m.url) + '">'
+    `<meta property="og:title" content="${mtEsc(m.title)}">`,
+    `<meta property="og:description" content="${mtEsc(m.desc)}">`
   ];
+  if(m.url) L.push(`<meta property="og:url" content="${mtEsc(m.url)}">`);
   if(m.img){
-    lines.push('<meta property="og:image" content="' + escAttr(m.img) + '">');
-    lines.push('<meta name="twitter:card" content="summary_large_image">');
+    L.push(`<meta property="og:image" content="${mtEsc(m.img)}">`,
+      '<meta property="og:image:width" content="1200">',
+      '<meta property="og:image:height" content="630">',
+      '<meta name="twitter:card" content="summary_large_image">',
+      `<meta name="twitter:image" content="${mtEsc(m.img)}">`);
   }
-  ta.value = lines.join('\n');
+  L.push('<!-- OG-END -->');
+  return L.join('\n');
 }
-async function makeOgThumbnail(){
-  const photo = draftPhotos(inviteCurId)[0];
-  if(!photo){ alert('이 시안에 등록된 사진이 없어요. 아래 「사진」에 먼저 추가해주세요.'); return; }
-  const img = new Image();
-  img.onload = () => {
-    const W = 1200, H = 630;
-    const c = document.createElement('canvas'); c.width = W; c.height = H;
-    const g = c.getContext('2d');
-    g.fillStyle = '#fff'; g.fillRect(0,0,W,H);
-    const sc = Math.max(W/img.width, H/img.height);
-    const w = img.width*sc, h = img.height*sc;
-    g.drawImage(img, (W-w)/2, (H-h)*0.35, w, h);
-    c.toBlob(b => {
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(b); a.download = 'og.jpg';
-      document.body.appendChild(a); a.click(); a.remove();
-      const d = curDraft();
-      if(d && !d.ogImage){ d.ogImage = 'og.jpg'; $('#inviteOgImage').value = 'og.jpg'; renderMetaSnippet(); scheduleInviteSave(); }
-      alert('og.jpg 를 내려받았어요. 이 파일을 GitHub 저장소 최상위(invite.html 옆)에 업로드해주세요.');
-    }, 'image/jpeg', 0.85);
-  };
-  img.onerror = () => alert('이미지를 불러오지 못했어요.');
-  img.src = photo.image;
+function mtParseBlock(html){
+  const mm = html.match(MT_OG_RE);
+  if(!mm) return null;
+  const dom = new DOMParser().parseFromString('<!DOCTYPE html><html><head>' + mm[0] + '</head><body></body></html>', 'text/html');
+  const g = k => { const e = dom.head.querySelector(`meta[property="${k}"]`); return e ? e.getAttribute('content') : ''; };
+  return { title: g('og:title') || dom.title || '', desc: g('og:description'), img: g('og:image'), url: g('og:url') };
+}
+function mtRenderPreview(){
+  $('#mtPvTitle').textContent = $('#mtTitle').value || '(제목 없음)';
+  $('#mtPvDesc').textContent = $('#mtDesc').value;
+  $('#mtPvUrl').textContent = ($('#mtPageUrl').value || '').replace(/^https?:\/\//, '').split('/')[0];
+  const el = $('#mtPvImg');
+  const src = mtNewImage ? mtNewImage.preview : $('#mtImgUrl').value.trim();
+  if(src){ el.style.backgroundImage = `url("${src}")`; el.textContent = ''; }
+  else{ el.style.backgroundImage = ''; el.textContent = '이미지 없음'; }
+}
+function updateMtPhotoSel(){
+  const sel = $('#mtPhotoSel'); if(!sel) return;
+  const prev = sel.value;
+  const list = draftPhotos(inviteCurId);
+  sel.innerHTML = '';
+  if(!list.length){ const o = document.createElement('option'); o.value = ''; o.textContent = '등록된 사진 없음'; sel.appendChild(o); return; }
+  list.forEach((p, i) => { const o = document.createElement('option'); o.value = p.id; o.textContent = '사진 ' + (i+1); sel.appendChild(o); });
+  if(prev && list.some(p => p.id === prev)) sel.value = prev;
+}
+// 이미지(src: dataURL/objectURL) → 1200x630 JPEG(약 300KB 이하)
+function mtMakeThumb(src){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const W = 1200, H = 630;
+      const c = document.createElement('canvas'); c.width = W; c.height = H;
+      const g = c.getContext('2d');
+      g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+      const sc = Math.max(W / img.width, H / img.height);
+      const w = img.width * sc, h = img.height * sc;
+      g.drawImage(img, (W - w) / 2, (H - h) * 0.35, w, h);
+      let q = 0.88;
+      const tryOnce = () => c.toBlob(b => {
+        if(!b) return reject(new Error('변환 실패'));
+        if(b.size > 300 * 1024 && q > 0.4){ q -= 0.08; tryOnce(); } else resolve(b);
+      }, 'image/jpeg', q);
+      tryOnce();
+    };
+    img.onerror = () => reject(new Error('이미지를 불러오지 못했어요.'));
+    img.src = src;
+  });
+}
+function mtBlobToB64(blob){
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(String(fr.result).split(',')[1]);
+    fr.onerror = reject;
+    fr.readAsDataURL(blob);
+  });
+}
+async function mtSetImage(src){
+  try{
+    const blob = await mtMakeThumb(src);
+    const preview = await new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(blob); });
+    mtNewImage = { blob, preview };
+    $('#mtImgInfo').textContent = `1200×630 · ${Math.round(blob.size/1024)}KB`;
+    mtRenderPreview();
+  }catch(e){ mtStatus(e.message, 'err'); }
+}
+function mtStampName(){
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  return `og-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}${p(d.getHours())}${p(d.getMinutes())}.jpg`;
+}
+function mtPathUrl(base){ return base.split('/').map(encodeURIComponent).join('/'); }
+
+async function mtLoad(){
+  const r = mtRepo();
+  if(!r.owner || !r.name){ mtStatus('저장소를 owner/name 형식으로 입력해주세요.', 'err'); return; }
+  if(!$('#mtToken').value.trim()){ $('#mtConn').open = true; mtStatus('GitHub 연결 설정에서 토큰을 입력해주세요.', 'err'); return; }
+  mtStatus('불러오는 중...');
+  try{
+    const res = await mtApi(`https://api.github.com/repos/${r.owner}/${r.name}/contents/${mtPathUrl(r.path)}?ref=${encodeURIComponent(r.branch)}`);
+    if(!res.ok){ mtStatus(await mtExplain(res), 'err'); return; }
+    const j = await res.json();
+    const cur = mtParseBlock(mtB64ToUtf8(j.content));
+    if(!cur){ mtStatus(`${r.path} 에서 OG-START ~ OG-END 구간을 찾지 못했어요.\n최신 invite.html 을 먼저 올려주세요.`, 'err'); return; }
+    $('#mtTitle').value = cur.title; $('#mtDesc').value = cur.desc;
+    $('#mtImgUrl').value = cur.img; $('#mtPageUrl').value = cur.url || mtDefaultPageUrl();
+    mtLsSet($('#mtRemember').checked ? $('#mtToken').value.trim() : '');
+    mtRenderPreview();
+    mtStatus('현재 값을 불러왔어요.', 'ok');
+  }catch(e){ mtStatus('불러오기 실패: ' + e.message, 'err'); }
+}
+async function mtSave(){
+  const r = mtRepo();
+  if(!r.owner || !r.name || !$('#mtToken').value.trim()){ $('#mtConn').open = true; mtStatus('GitHub 연결 설정에서 저장소와 토큰을 입력해주세요.', 'err'); return; }
+  const title = $('#mtTitle').value.trim(), desc = $('#mtDesc').value.trim();
+  if(!title){ mtStatus('제목을 입력해주세요.', 'err'); return; }
+  $('#mtSaveBtn').disabled = true;
+  mtStatus('저장 중...');
+  try{
+    const base = `https://api.github.com/repos/${r.owner}/${r.name}/contents/`;
+    let imgUrl = $('#mtImgUrl').value.trim();
+    if(mtNewImage){
+      const dir = r.path.includes('/') ? r.path.replace(/[^/]*$/, '') : '';
+      const fname = $('#mtStamp').checked ? mtStampName() : 'og.jpg';
+      const target = dir + fname;
+      let sha;
+      if(!$('#mtStamp').checked){
+        const ex = await mtApi(base + mtPathUrl(target) + '?ref=' + encodeURIComponent(r.branch));
+        if(ex.ok) sha = (await ex.json()).sha;
+      }
+      const put = await mtApi(base + mtPathUrl(target), {
+        method:'PUT',
+        body: JSON.stringify({ message: `image: 링크 미리보기 이미지 업로드 (${fname})`, content: await mtBlobToB64(mtNewImage.blob), branch: r.branch, sha })
+      });
+      if(!put.ok){ mtStatus('이미지 업로드 실패\n' + await mtExplain(put), 'err'); return; }
+      imgUrl = new URL(fname, ($('#mtPageUrl').value.trim() || mtDefaultPageUrl())).href;
+    }
+    const res = await mtApi(base + mtPathUrl(r.path) + '?ref=' + encodeURIComponent(r.branch));
+    if(!res.ok){ mtStatus(await mtExplain(res), 'err'); return; }
+    const j = await res.json();
+    const html = mtB64ToUtf8(j.content);
+    if(!MT_OG_RE.test(html)){ mtStatus('OG-START ~ OG-END 구간이 없어요. 최신 invite.html 을 먼저 올려주세요.', 'err'); return; }
+    const out = html.replace(MT_OG_RE, () => mtBuildBlock({ title, desc, img: imgUrl, url: $('#mtPageUrl').value.trim() }));
+    if(out === html && !mtNewImage){ mtStatus('변경된 내용이 없어요.', 'ok'); return; }
+    const put = await mtApi(base + mtPathUrl(r.path), {
+      method:'PUT',
+      body: JSON.stringify({ message: 'feat: 링크 미리보기 메타태그 수정', content: mtUtf8ToB64(out), branch: r.branch, sha: j.sha })
+    });
+    if(!put.ok){ mtStatus(await mtExplain(put), 'err'); return; }
+    mtLsSet($('#mtRemember').checked ? $('#mtToken').value.trim() : '');
+    $('#mtImgUrl').value = imgUrl; mtNewImage = null; $('#mtImgInfo').textContent = '';
+    mtRenderPreview();
+    mtStatus('저장했어요. 1~2분 뒤 반영돼요. (카카오톡은 공유 디버거에서 캐시 초기화)', 'ok');
+  }catch(e){ mtStatus('저장 실패: ' + e.message, 'err'); }
+  finally{ $('#mtSaveBtn').disabled = false; }
+}
+function bindMetaEditor(){
+  $('#mtToken').value = mtLsGet(); $('#mtRemember').checked = !!mtLsGet();
+  $('#mtPageUrl').value = mtDefaultPageUrl();
+  ['mtTitle','mtDesc','mtImgUrl','mtPageUrl'].forEach(id => $('#'+id).addEventListener('input', mtRenderPreview));
+  $('#mtPhotoBtn').addEventListener('click', () => {
+    const p = draftPhotos(inviteCurId).find(x => x.id === $('#mtPhotoSel').value);
+    if(!p){ mtStatus('이 시안에 등록된 사진이 없어요. 「내 이미지 파일」을 쓰거나 아래에 사진을 먼저 추가해주세요.', 'err'); return; }
+    mtSetImage(p.image);
+  });
+  $('#mtUploadBtn').addEventListener('click', () => $('#mtFile').click());
+  $('#mtFile').addEventListener('change', ev => {
+    const f = ev.target.files[0]; ev.target.value = '';
+    if(!f) return;
+    const fr = new FileReader();
+    fr.onload = () => mtSetImage(fr.result);
+    fr.readAsDataURL(f);
+  });
+  $('#mtLoadBtn').addEventListener('click', mtLoad);
+  $('#mtSaveBtn').addEventListener('click', mtSave);
+  mtRenderPreview();
 }
 
 function renderInviteAll(force){
@@ -1488,26 +1684,17 @@ function renderInviteAll(force){
 function bindInvitationTab(){
   const fieldMap = {
     inviteGroomName:'groomName', inviteBrideName:'brideName', inviteDateTime:'weddingDateTime',
-    inviteVenueName:'venueName', inviteVenueAddress:'venueAddress', inviteMapQuery:'mapQuery',
-    inviteOgTitle:'ogTitle', inviteOgDesc:'ogDescription', inviteOgImage:'ogImage'
+    inviteVenueName:'venueName', inviteVenueAddress:'venueAddress', inviteMapQuery:'mapQuery'
   };
   Object.keys(fieldMap).forEach(id => {
     $('#'+id).addEventListener('input', ev => {
       const d = curDraft(); if(!d) return;
       d[fieldMap[id]] = ev.target.value;
       $('#inviteMapTestLink').href = naverMapUrl(d);
-      renderMetaSnippet();
       scheduleInviteSave();
     });
   });
   $('#inviteAddBlockBtn').addEventListener('click', addBlock);
-  $('#inviteMetaCopyBtn').addEventListener('click', async () => {
-    const ta = $('#inviteMetaCode'), btn = $('#inviteMetaCopyBtn');
-    try{ await navigator.clipboard.writeText(ta.value); btn.textContent = '복사됨 ✓'; }
-    catch(e){ ta.select(); document.execCommand('copy'); btn.textContent = '복사됨 ✓'; }
-    setTimeout(() => { btn.textContent = '코드 복사'; }, 1500);
-  });
-  $('#inviteOgThumbBtn').addEventListener('click', makeOgThumbnail);
   $('#inviteSetActiveBtn').addEventListener('click', () => { const d = curDraft(); if(d) setActiveDraft(d.id); });
   $('#inviteDuplicateBtn').addEventListener('click', duplicateDraft);
   $('#inviteCopyLinkBtn').addEventListener('click', async () => {
@@ -2812,6 +2999,7 @@ bindMoodboard();
 bindInfoSheet();
 initInfoEditor();
 bindInvitationTab();
+bindMetaEditor();
 bindGuestTab();
 bindAuth();
 
