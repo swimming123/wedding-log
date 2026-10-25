@@ -638,6 +638,29 @@
         </div>
       </div>
 
+      <div class="block" style="padding:16px; margin-bottom:16px;">
+        <div class="invite-section-title">링크 미리보기 (메타태그) <span class="hint">(카카오톡·문자로 링크를 보낼 때 뜨는 제목/설명/썸네일)</span></div>
+        <div style="display:grid; grid-template-columns:1fr; gap:12px;">
+          <div class="field"><label>제목 <span class="hint">(비우면 "신랑 ♥ 신부 결혼합니다")</span></label><input type="text" id="inviteOgTitle" placeholder="OO ♥ OO 결혼합니다"></div>
+          <div class="field"><label>설명 <span class="hint">(비우면 예식 일시·장소)</span></label><input type="text" id="inviteOgDesc" placeholder="2027년 5월 1일 토요일 오후 2시 · OO웨딩홀"></div>
+          <div class="field">
+            <label>썸네일 이미지 파일명 <span class="hint">(저장소에 올린 파일, 예: og.jpg)</span></label>
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="inviteOgImage" placeholder="og.jpg" style="flex:1;">
+              <button class="btn-ghost" id="inviteOgThumbBtn" style="white-space:nowrap;">이 시안 첫 사진으로 썸네일 만들기</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>invite.html 에 넣을 메타태그 코드 <button class="btn-ghost" id="inviteMetaCopyBtn" style="margin-left:8px;">코드 복사</button></label>
+            <textarea id="inviteMetaCode" rows="9" readonly style="font-family:monospace; font-size:12px; width:100%; box-sizing:border-box;"></textarea>
+            <div class="hint" style="margin-top:6px; line-height:1.6;">
+              ※ 카카오톡 등은 자바스크립트를 실행하지 않고 <b>invite.html 파일 안에 적힌 메타태그</b>만 읽어요. 그래서 위 코드를 invite.html 의 <code>&lt;!-- OG-START --&gt;</code> ~ <code>&lt;!-- OG-END --&gt;</code> 사이에 붙여넣어 커밋해야 반영돼요.<br>
+              ※ 썸네일 파일은 invite.html 과 같은 폴더(저장소 최상위)에 올려주세요. 이미 공유한 링크의 미리보기가 안 바뀌면 카카오 공유 디버거에서 해당 URL의 캐시를 초기화하세요.
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="block" style="padding:16px;">
         <div class="invite-section-title">사진 <span class="hint">(이 시안 전용 · 여러 장이면 좌우로 넘기는 슬라이드 · 드래그/Ctrl+V/클릭)</span></div>
         <div id="inviteDropzone" class="invite-dropzone">
@@ -1067,7 +1090,7 @@ function defaultBlocks(phrase){
   ];
 }
 function newDraft(name, order){
-  return { id:uid(), name:name, order:order, groomName:'', brideName:'', weddingDateTime:'', venueName:'', venueAddress:'', mapQuery:'', blocks:defaultBlocks() };
+  return { id:uid(), name:name, order:order, groomName:'', brideName:'', weddingDateTime:'', venueName:'', venueAddress:'', mapQuery:'', ogTitle:'', ogDescription:'', ogImage:'', blocks:defaultBlocks() };
 }
 function naverMapUrl(d){
   const q = (d.mapQuery || d.venueAddress || d.venueName || '').trim();
@@ -1088,7 +1111,7 @@ function applyInviteSnapshot(data){
   if(data.drafts && Object.keys(data.drafts).length){
     Object.keys(data.drafts).forEach(id => {
       const d = data.drafts[id];
-      drafts[id] = Object.assign({id:id, name:'시안', order:0, groomName:'', brideName:'', weddingDateTime:'', venueName:'', venueAddress:'', mapQuery:'', blocks:[]}, d);
+      drafts[id] = Object.assign({id:id, name:'시안', order:0, groomName:'', brideName:'', weddingDateTime:'', venueName:'', venueAddress:'', mapQuery:'', ogTitle:'', ogDescription:'', ogImage:'', blocks:[]}, d);
     });
   }else{
     drafts.main = {
@@ -1201,7 +1224,7 @@ function renderInviteTabs(){
     const maxOrder = list.reduce((m,d)=> Math.max(m, d.order||0), -1);
     const nd = newDraft('시안 ' + (list.length+1), maxOrder+1);
     const cur = curDraft();
-    if(cur){ nd.groomName = cur.groomName; nd.brideName = cur.brideName; nd.weddingDateTime = cur.weddingDateTime; nd.venueName = cur.venueName; nd.venueAddress = cur.venueAddress; nd.mapQuery = cur.mapQuery; }
+    if(cur){ nd.groomName = cur.groomName; nd.brideName = cur.brideName; nd.weddingDateTime = cur.weddingDateTime; nd.venueName = cur.venueName; nd.venueAddress = cur.venueAddress; nd.mapQuery = cur.mapQuery; nd.ogTitle = cur.ogTitle; nd.ogDescription = cur.ogDescription; nd.ogImage = cur.ogImage; }
     inviteDrafts[nd.id] = nd;
     inviteCurId = nd.id;
     renderInviteAll(true);
@@ -1248,6 +1271,10 @@ function renderInviteForm(force){
   setVal('inviteVenueName', d.venueName);
   setVal('inviteVenueAddress', d.venueAddress);
   setVal('inviteMapQuery', d.mapQuery);
+  setVal('inviteOgTitle', d.ogTitle);
+  setVal('inviteOgDesc', d.ogDescription);
+  setVal('inviteOgImage', d.ogImage);
+  renderMetaSnippet();
   $('#inviteMapTestLink').href = naverMapUrl(d);
   const isActive = d.id === inviteActiveId;
   const badge = $('#inviteActiveBadge');
@@ -1392,6 +1419,64 @@ async function addInvitationPhotoFile(file){
   await saveInvitationPhoto(photo);
 }
 
+/* ---- 링크 미리보기(메타태그) ---- */
+function fmtKoDate(dtStr){
+  const t = new Date(dtStr); if(!dtStr || isNaN(t)) return '';
+  const days = ['일','월','화','수','목','금','토'];
+  const h = t.getHours(), m = t.getMinutes();
+  return `${t.getFullYear()}년 ${t.getMonth()+1}월 ${t.getDate()}일 ${days[t.getDay()]}요일 ${h<12?'오전':'오후'} ${(h%12)||12}시${m?(' '+m+'분'):''}`;
+}
+function effectiveMeta(d){
+  const title = (d.ogTitle || '').trim() || ((d.groomName && d.brideName) ? `${d.groomName} ♥ ${d.brideName} 결혼합니다` : '모바일 청첩장');
+  const desc = (d.ogDescription || '').trim() || [fmtKoDate(d.weddingDateTime), d.venueName].filter(Boolean).join(' · ') || '소중한 분들을 초대합니다';
+  let img = '';
+  const f = (d.ogImage || '').trim();
+  if(f){ try{ img = new URL(f, new URL('invite.html', location.href)).href; }catch(e){} }
+  return { title, desc, img, url: new URL('invite.html', location.href).href.split('?')[0] };
+}
+function escAttr(v){ return String(v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function renderMetaSnippet(){
+  const d = curDraft(); const ta = $('#inviteMetaCode'); if(!d || !ta) return;
+  const m = effectiveMeta(d);
+  const lines = [
+    '<title>' + escAttr(m.title) + '</title>',
+    '<meta name="description" content="' + escAttr(m.desc) + '">',
+    '<meta property="og:type" content="website">',
+    '<meta property="og:title" content="' + escAttr(m.title) + '">',
+    '<meta property="og:description" content="' + escAttr(m.desc) + '">',
+    '<meta property="og:url" content="' + escAttr(m.url) + '">'
+  ];
+  if(m.img){
+    lines.push('<meta property="og:image" content="' + escAttr(m.img) + '">');
+    lines.push('<meta name="twitter:card" content="summary_large_image">');
+  }
+  ta.value = lines.join('\n');
+}
+async function makeOgThumbnail(){
+  const photo = draftPhotos(inviteCurId)[0];
+  if(!photo){ alert('이 시안에 등록된 사진이 없어요. 아래 「사진」에 먼저 추가해주세요.'); return; }
+  const img = new Image();
+  img.onload = () => {
+    const W = 1200, H = 630;
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const g = c.getContext('2d');
+    g.fillStyle = '#fff'; g.fillRect(0,0,W,H);
+    const sc = Math.max(W/img.width, H/img.height);
+    const w = img.width*sc, h = img.height*sc;
+    g.drawImage(img, (W-w)/2, (H-h)*0.35, w, h);
+    c.toBlob(b => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(b); a.download = 'og.jpg';
+      document.body.appendChild(a); a.click(); a.remove();
+      const d = curDraft();
+      if(d && !d.ogImage){ d.ogImage = 'og.jpg'; $('#inviteOgImage').value = 'og.jpg'; renderMetaSnippet(); scheduleInviteSave(); }
+      alert('og.jpg 를 내려받았어요. 이 파일을 GitHub 저장소 최상위(invite.html 옆)에 업로드해주세요.');
+    }, 'image/jpeg', 0.85);
+  };
+  img.onerror = () => alert('이미지를 불러오지 못했어요.');
+  img.src = photo.image;
+}
+
 function renderInviteAll(force){
   if(!curDraft()) return;
   renderInviteTabs();
@@ -1403,17 +1488,26 @@ function renderInviteAll(force){
 function bindInvitationTab(){
   const fieldMap = {
     inviteGroomName:'groomName', inviteBrideName:'brideName', inviteDateTime:'weddingDateTime',
-    inviteVenueName:'venueName', inviteVenueAddress:'venueAddress', inviteMapQuery:'mapQuery'
+    inviteVenueName:'venueName', inviteVenueAddress:'venueAddress', inviteMapQuery:'mapQuery',
+    inviteOgTitle:'ogTitle', inviteOgDesc:'ogDescription', inviteOgImage:'ogImage'
   };
   Object.keys(fieldMap).forEach(id => {
     $('#'+id).addEventListener('input', ev => {
       const d = curDraft(); if(!d) return;
       d[fieldMap[id]] = ev.target.value;
       $('#inviteMapTestLink').href = naverMapUrl(d);
+      renderMetaSnippet();
       scheduleInviteSave();
     });
   });
   $('#inviteAddBlockBtn').addEventListener('click', addBlock);
+  $('#inviteMetaCopyBtn').addEventListener('click', async () => {
+    const ta = $('#inviteMetaCode'), btn = $('#inviteMetaCopyBtn');
+    try{ await navigator.clipboard.writeText(ta.value); btn.textContent = '복사됨 ✓'; }
+    catch(e){ ta.select(); document.execCommand('copy'); btn.textContent = '복사됨 ✓'; }
+    setTimeout(() => { btn.textContent = '코드 복사'; }, 1500);
+  });
+  $('#inviteOgThumbBtn').addEventListener('click', makeOgThumbnail);
   $('#inviteSetActiveBtn').addEventListener('click', () => { const d = curDraft(); if(d) setActiveDraft(d.id); });
   $('#inviteDuplicateBtn').addEventListener('click', duplicateDraft);
   $('#inviteCopyLinkBtn').addEventListener('click', async () => {
